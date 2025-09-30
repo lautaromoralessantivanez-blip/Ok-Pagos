@@ -121,17 +121,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
                 <input type="date" id="evDate" />
               </div>
               <div class="col">
-                <label>Personas <span class="err" id="errPeople"></span></label>
-                <input required type="number" id="evPeople" min="1" value="100" inputmode="numeric" />
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col">
-                <label>Precio por persona (cierre) <span class="err" id="errPrice"></span></label>
-                <input required type="text" id="evPricePer" placeholder="Ej: 15000" inputmode="decimal" />
-              </div>
-              <div class="col">
                 <label>Provincia</label>
                 <select id="evProvince">
                   <option>San Juan</option>
@@ -145,6 +134,42 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 
             <label>Opción (paquete/plan del evento)</label>
             <input type="text" id="evOption" placeholder="Ej: Opción Dorada / Paquete Full" />
+
+            <div class="row">
+              <div class="col">
+                <label>Precio por persona (cena) <span class="err" id="errPrice"></span></label>
+                <input required type="text" id="evPricePer" placeholder="Ej: 15000" inputmode="decimal" />
+                <div class="small">Niños a cena pagan <b>50%</b> de este precio.</div>
+              </div>
+              <div class="col">
+                <label>Precio “después de cena” (adultos)</label>
+                <input type="text" id="evPriceAfter" placeholder="Ej: 5000" inputmode="decimal" />
+                <label style="margin-top:-4px">Precio “después de cena” (niños)</label>
+                <input type="text" id="evPriceAfterKids" placeholder="Ej: 3000" inputmode="decimal" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <label>Adultos a cena</label>
+                <input required type="number" id="evAdultsDinner" min="0" value="100" inputmode="numeric" />
+              </div>
+              <div class="col">
+                <label>Niños a cena (50%)</label>
+                <input type="number" id="evKidsDinner" min="0" value="0" inputmode="numeric" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <label>Adultos después de cena</label>
+                <input type="number" id="evAdultsAfter" min="0" value="0" inputmode="numeric" />
+              </div>
+              <div class="col">
+                <label>Niños después de cena</label>
+                <input type="number" id="evKidsAfter" min="0" value="0" inputmode="numeric" />
+              </div>
+            </div>
 
             <div class="small" id="evBasePreview">Total base estimado: $ 0,00</div>
             <div class="inline" style="justify-content:flex-end;margin-top:8px">
@@ -178,7 +203,9 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
       <div class="col">
         <div class="card">
           <h3 style="margin:0 0 6px">Resumen</h3>
-          <div class="small">Base (personas × precio cierre): <b id="newSumBase">$ 0,00</b></div>
+          <div class="small">Cena — Adultos: <b id="prevAdultsDinner">0</b> • Niños (50%): <b id="prevKidsDinner">0</b></div>
+          <div class="small">Después — Adultos: <b id="prevAdultsAfter">0</b> • Niños: <b id="prevKidsAfter">0</b></div>
+          <div class="small">Base (todas personas): <b id="newSumBase">$ 0,00</b></div>
           <div class="small">Extras/Combos: <b id="newSumExtras">$ 0,00</b></div>
           <div class="small">TOTAL: <b id="newSumTotal" class="total">$ 0,00</b></div>
         </div>
@@ -342,7 +369,10 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <div class="card">
           <h3 style="margin:0 0 6px">Resumen</h3>
           <div class="small">Salón: <b id="sumSalon">—</b></div>
-          <div class="small">Personas: <b id="sumPeople">0</b> — Precio/Persona: <b id="sumPricePer">$ 0,00</b></div>
+          <div class="small">Cena — Adultos: <b id="sumAdultsDinner">0</b> • Niños (50%): <b id="sumKidsDinner">0</b></div>
+          <div class="small">Después — Adultos: <b id="sumAdultsAfter">0</b> • Niños: <b id="sumKidsAfter">0</b></div>
+          <div class="small">Precio/Persona (cena): <b id="sumPricePer">$ 0,00</b></div>
+          <div class="small">Precio “después” Adultos/Niños: <b id="sumAfterPrices">$ 0,00 / $ 0,00</b></div>
           <div class="small">Base: <b id="sumBase">$ 0,00</b> — Ajustes: <b id="sumAdj">$ 0,00</b> — Extras: <b id="sumExtras">$ 0,00</b></div>
           <div class="small">TOTAL: <b id="sumTotal" class="total">$ 0,00</b> — Abonado: <b id="sumPaid">$ 0,00</b> — SALDO: <b id="sumRemain" class="total">$ 0,00</b></div>
         </div>
@@ -355,20 +385,39 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <button id="saveSalon" type="button">Guardar</button>
           </div>
         </div>
+
         <div class="card">
-          <h3 style="margin:0 0 6px">Reprecio por persona</h3>
+          <h3 style="margin:0 0 6px">Editar personas & precios “después de cena”</h3>
+          <div class="inline" style="gap:10px">
+            <input type="number" id="edAdultsDinner" min="0" placeholder="Adultos cena">
+            <input type="number" id="edKidsDinner" min="0" placeholder="Niños cena (50%)">
+          </div>
+          <div class="inline" style="gap:10px">
+            <input type="number" id="edAdultsAfter" min="0" placeholder="Adultos después">
+            <input type="number" id="edKidsAfter" min="0" placeholder="Niños después">
+          </div>
+          <div class="inline" style="gap:10px">
+            <input type="text" id="edPriceAfter" placeholder="Precio después (adultos)" inputmode="decimal">
+            <input type="text" id="edPriceAfterKids" placeholder="Precio después (niños)" inputmode="decimal">
+          </div>
+          <div class="inline" style="justify-content:flex-end"><button id="savePeople" type="button">Guardar cambios</button></div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 6px">Reprecio por persona (cena)</h3>
           <div class="inline">
-            <input id="newPricePer" type="text" placeholder="Nuevo precio" inputmode="decimal">
+            <input id="newPricePer" type="text" placeholder="Nuevo precio cena" inputmode="decimal">
             <button id="btnReprice" type="button">Aplicar</button>
           </div>
-          <div class="small">Se ajusta solo sobre las personas pendientes de pago.</div>
+          <div class="small">Ajusta <b>solo</b> el precio de cena. Aplica sobre “unidades de cena” pendientes (adulto=1, niño=0.5).</div>
         </div>
+
         <div class="card">
           <h3 style="margin:0 0 6px">Ajustes manuales</h3>
           <div class="inline" style="gap:8px">
             <input id="adjPercent" type="text" placeholder="% sobre saldo" inputmode="decimal" style="flex:1">
             <input id="adjAmount" type="text" placeholder="Monto fijo" inputmode="decimal" style="flex:1">
-            <input id="adjPerHead" type="text" placeholder="$ por persona" inputmode="decimal" style="flex:1">
+            <input id="adjPerHead" type="text" placeholder="$ por persona (todas)" inputmode="decimal" style="flex:1">
             <button id="adjApply" type="button">Aplicar</button>
           </div>
         </div>
@@ -635,7 +684,7 @@ auth.onAuthStateChanged(async (user)=>{
       store.set(K.EVENTS, events); renderEventList();
       if(currentEventId){
         const still = events.find(e=>e.id===currentEventId);
-        if(still){ renderEventItems(); renderPayments(); refreshSummary(); }
+        if(still){ renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(still); }
         else { evPanelBk.style.display='none'; currentEventId=null; }
       }
     });
@@ -662,20 +711,26 @@ auth.onAuthStateChanged(async (user)=>{
 });
 }
 
-/* ===== Refs UI ===== */
+/* ===== Refs UI (crear) ===== */
 const evForm = document.getElementById('evForm');
 const evType = document.getElementById('evType');
 const evName = document.getElementById('evName');
 const evDate = document.getElementById('evDate');
 const errName = document.getElementById('errName');
 const errDate = document.getElementById('errDate');
-const errPeople = document.getElementById('errPeople');
 const errPrice = document.getElementById('errPrice');
-const evPeople = document.getElementById('evPeople');
 const evPricePer = document.getElementById('evPricePer');
 const evProvince = document.getElementById('evProvince');
 const evSalon = document.getElementById('evSalon');
 const evOption = document.getElementById('evOption');
+
+const evAdultsDinner = document.getElementById('evAdultsDinner');
+const evKidsDinner = document.getElementById('evKidsDinner');
+const evAdultsAfter = document.getElementById('evAdultsAfter');
+const evKidsAfter = document.getElementById('evKidsAfter');
+const evPriceAfter = document.getElementById('evPriceAfter');
+const evPriceAfterKids = document.getElementById('evPriceAfterKids');
+
 const evBasePreview = document.getElementById('evBasePreview');
 
 const newExFor = document.getElementById('newExFor');
@@ -689,6 +744,12 @@ const newSumExtras = document.getElementById('newSumExtras');
 const newSumTotal = document.getElementById('newSumTotal');
 const newClear = document.getElementById('newClear');
 
+const prevAdultsDinner = document.getElementById('prevAdultsDinner');
+const prevKidsDinner = document.getElementById('prevKidsDinner');
+const prevAdultsAfter = document.getElementById('prevAdultsAfter');
+const prevKidsAfter = document.getElementById('prevKidsAfter');
+
+/* ===== Refs UI (catálogo) ===== */
 const exType = document.getElementById('exType');
 const exName = document.getElementById('exName');
 const exPrice = document.getElementById('exPrice');
@@ -702,10 +763,12 @@ const btnUpload = document.getElementById('btnUpload');
 const exLink = document.getElementById('exLink');
 const btnAddLink = document.getElementById('btnAddLink');
 
+/* ===== Refs UI (lista) ===== */
 const evSearch = document.getElementById('evSearch');
 const evList = document.getElementById('evList');
 const provChips = Array.from(document.querySelectorAll('.subtabs .chip'));
 
+/* ===== Refs UI (panel) ===== */
 const evPanelBk = document.getElementById('evPanelBk');
 const pClose = document.getElementById('pClose');
 const pDelete = document.getElementById('pDelete');
@@ -741,7 +804,6 @@ const btnReprice = document.getElementById('btnReprice');
 const adjApply = document.getElementById('adjApply');
 
 const sumSalon = document.getElementById('sumSalon');
-const sumPeople = document.getElementById('sumPeople');
 const sumPricePer = document.getElementById('sumPricePer');
 const sumBase = document.getElementById('sumBase');
 const sumAdj = document.getElementById('sumAdj');
@@ -749,8 +811,23 @@ const sumExtras = document.getElementById('sumExtras');
 const sumTotal = document.getElementById('sumTotal');
 const sumPaid = document.getElementById('sumPaid');
 const sumRemain = document.getElementById('sumRemain');
+
+const sumAdultsDinner = document.getElementById('sumAdultsDinner');
+const sumKidsDinner = document.getElementById('sumKidsDinner');
+const sumAdultsAfter = document.getElementById('sumAdultsAfter');
+const sumKidsAfter = document.getElementById('sumKidsAfter');
+const sumAfterPrices = document.getElementById('sumAfterPrices');
+
 const editSalon = document.getElementById('editSalon');
 const saveSalon = document.getElementById('saveSalon');
+
+const edAdultsDinner = document.getElementById('edAdultsDinner');
+const edKidsDinner = document.getElementById('edKidsDinner');
+const edAdultsAfter = document.getElementById('edAdultsAfter');
+const edKidsAfter = document.getElementById('edKidsAfter');
+const edPriceAfter = document.getElementById('edPriceAfter');
+const edPriceAfterKids = document.getElementById('edPriceAfterKids');
+const savePeople = document.getElementById('savePeople');
 
 let currentEventId = null;
 let lastUploadedProofUrl = null;
@@ -760,7 +837,9 @@ let newEventItems = [];
 /* ===== INIT ===== */
 document.addEventListener('DOMContentLoaded', ()=>{
   fillCatalogSelects(); renderCatalog(); renderEventList(); updateNewPreview();
-  ['input','change'].forEach(evt=>{ evPeople.addEventListener(evt, updateNewPreview); evPricePer.addEventListener(evt, updateNewPreview); });
+  ['input','change'].forEach(evt=>{
+    [evAdultsDinner,evKidsDinner,evAdultsAfter,evKidsAfter,evPricePer,evPriceAfter,evPriceAfterKids].forEach(el=> el.addEventListener(evt, updateNewPreview));
+  });
   provChips.forEach(ch=> ch.onclick=()=>{ provChips.forEach(x=>x.classList.remove('active')); ch.classList.add('active'); renderEventList(); });
 });
 
@@ -782,16 +861,45 @@ function getActiveProvince(){ const a=document.querySelector('.subtabs .chip.act
 /* ===== Crear evento ===== */
 evForm.addEventListener('submit', (e)=>{ e.preventDefault(); handleCreateEvent(); });
 async function handleCreateEvent(){
-  errName.textContent=errDate.textContent=errPeople.textContent=errPrice.textContent='';
-  const name=(evName.value||'').trim(); const date=parseDateInput(evDate.value); const people=num(evPeople.value); const pricePer=num(evPricePer.value);
-  if(!name){ errName.textContent=' requerido'; return; } if(!date){ errDate.textContent=' requerido'; return; } if(people<=0){ errPeople.textContent=' inválido'; return; } if(pricePer<=0){ errPrice.textContent=' inválido'; return; }
+  errName.textContent=errDate.textContent=errPrice.textContent='';
+  const name=(evName.value||'').trim(); const date=parseDateInput(evDate.value);
+  const pricePer=num(evPricePer.value);
+  if(!name){ errName.textContent=' requerido'; return; }
+  if(!date){ errDate.textContent=' requerido'; return; }
+  if(pricePer<=0){ errPrice.textContent=' inválido'; return; }
+
+  const ad= Math.max(0, num(evAdultsDinner.value));
+  const kd= Math.max(0, num(evKidsDinner.value));
+  const aa= Math.max(0, num(evAdultsAfter.value));
+  const ka= Math.max(0, num(evKidsAfter.value));
+  const pA = Math.max(0, num(evPriceAfter.value));
+  const pK = Math.max(0, num(evPriceAfterKids.value));
 
   const id=uid();
-  const payload={ id, type:evType.value, name, date, people, pricePer,
-    baseTotal:people*pricePer, adjustmentsTotal:0, province:evProvince.value||'San Juan',
-    salon:(evSalon.value||'').trim()||null, optionLabel:(evOption.value||'').trim()||null,
-    items:[...newEventItems.map(x=>({...x}))], payments:[], adjustments:[], createdAt:Date.now()
+  const payload={
+    id,
+    type:evType.value,
+    name,
+    date,
+    province:evProvince.value||'San Juan',
+    salon:(evSalon.value||'').trim()||null,
+    optionLabel:(evOption.value||'').trim()||null,
+    pricePer:pricePer,
+    priceAfter:pA,
+    priceAfterKids:pK,
+    adultsDinner:ad,
+    kidsDinner:kd,
+    adultsAfter:aa,
+    kidsAfter:ka,
+    items:[...newEventItems.map(x=>({...x}))],
+    payments:[],
+    adjustments:[],
+    adjustmentsTotal:0,
+    createdAt:Date.now()
   };
+
+  // Base calculada (solo informativa al crear)
+  payload.baseTotal = baseOf(payload);
 
   if(isAuthed()){
     const ref = await UCOL('events').add(payload); await ref.update({id:ref.id});
@@ -799,34 +907,63 @@ async function handleCreateEvent(){
     events.unshift(payload); store.set(K.EVENTS, events);
   }
 
-  evType.value='15 años'; evName.value=''; evDate.value=''; evPeople.value='100'; evPricePer.value='';
-  evOption.value=''; evSalon.value=''; newEventItems=[]; renderNewItems(); updateNewPreview();
-  renderEventList(); alert('Evento creado ✅');
+  // reset
+  evType.value='15 años'; evName.value=''; evDate.value='';
+  evProvince.value='San Juan'; evSalon.value=''; evOption.value='';
+  evPricePer.value=''; evPriceAfter.value=''; evPriceAfterKids.value='';
+  evAdultsDinner.value='100'; evKidsDinner.value='0'; evAdultsAfter.value='0'; evKidsAfter.value='0';
+  newEventItems=[]; renderNewItems(); updateNewPreview(); renderEventList();
+  alert('Evento creado ✅');
 }
 
 /* ===== Ítems NUEVO evento ===== */
-newAddEx.addEventListener('click', ()=>{ const id=newExFor.value; if(!id) return alert('Elegí un ítem');
-  const base=extras.find(x=>x.id===id); const qty=Math.max(1,num(newExQty.value)); const override=newExPrice.value===''?null:num(newExPrice.value);
-  newEventItems.unshift({id:base.id,type:base.type,name:base.name,price:base.price,overridePrice:override,qty}); newExQty.value='1'; newExPrice.value=''; renderNewItems(); updateNewPreview();
+newAddEx.addEventListener('click', ()=>{
+  const id=newExFor.value; if(!id) return alert('Elegí un ítem');
+  const base=extras.find(x=>x.id===id);
+  const qty=Math.max(1,num(newExQty.value));
+  const override=newExPrice.value===''?null:num(newExPrice.value);
+  newEventItems.unshift({id:base.id,type:base.type,name:base.name,price:base.price,overridePrice:override,qty});
+  newExQty.value='1'; newExPrice.value=''; renderNewItems(); updateNewPreview();
 });
 newClear.addEventListener('click', ()=>{ newEventItems=[]; renderNewItems(); updateNewPreview(); });
-function renderNewItems(){ newExList.innerHTML=''; let total=0;
-  newEventItems.forEach((e,idx)=>{ const price=num(e.overridePrice ?? e.price); const sub=price*e.qty; total+=sub;
+function renderNewItems(){
+  newExList.innerHTML=''; let total=0;
+  newEventItems.forEach((e,idx)=>{
+    const price=num(e.overridePrice ?? e.price);
+    const sub=price*e.qty; total+=sub;
     const div=document.createElement('div'); div.className='item';
     const chip=e.type==='combo'?'<span class="badge">Combo</span>':'<span class="badge">Extra</span>';
     div.innerHTML=`<div><b>${e.name}</b> ${chip}<div class="small">Precio: ${money(price)} — Cant: ${e.qty} — Subtotal: <b>${money(sub)}</b></div></div>
-                   <button class="ghost" data-del="${idx}">Quitar</button>`; newExList.appendChild(div);
+                   <button class="ghost" data-del="${idx}">Quitar</button>`;
+    newExList.appendChild(div);
   });
   newExList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=()=>{ newEventItems.splice(Number(b.dataset.del),1); renderNewItems(); updateNewPreview(); });
   newExTotal.textContent=money(total);
 }
-function updateNewPreview(){ const base=num(evPeople.value)*num(evPricePer.value); let ex=0; newEventItems.forEach(e=>{ const price=num(e.overridePrice ?? e.price); ex+=price*num(e.qty); });
-  newSumBase.textContent=money(base); newSumExtras.textContent=money(ex); newSumTotal.textContent=money(base+ex); evBasePreview.textContent='Total base estimado: '+money(base);
+function updateNewPreview(){
+  const tempEv={
+    pricePer:num(evPricePer.value),
+    priceAfter:num(evPriceAfter.value),
+    priceAfterKids:num(evPriceAfterKids.value),
+    adultsDinner:Math.max(0,num(evAdultsDinner.value)),
+    kidsDinner:Math.max(0,num(evKidsDinner.value)),
+    adultsAfter:Math.max(0,num(evAdultsAfter.value)),
+    kidsAfter:Math.max(0,num(evKidsAfter.value))
+  };
+  const base = baseOf(tempEv);
+  let ex=0; newEventItems.forEach(e=>{ const price=num(e.overridePrice ?? e.price); ex+=price*num(e.qty); });
+  prevAdultsDinner.textContent=tempEv.adultsDinner;
+  prevKidsDinner.textContent=tempEv.kidsDinner;
+  prevAdultsAfter.textContent=tempEv.adultsAfter;
+  prevKidsAfter.textContent=tempEv.kidsAfter;
+  newSumBase.textContent=money(base); newSumExtras.textContent=money(ex); newSumTotal.textContent=money(base+ex);
+  evBasePreview.textContent='Total base estimado: '+money(base);
 }
 
 /* ===== Catálogo ===== */
 function renderCatalog(){
-  exList.innerHTML=''; extras.forEach(it=>{ const row=document.createElement('div'); row.className='item';
+  exList.innerHTML=''; extras.forEach(it=>{
+    const row=document.createElement('div'); row.className='item';
     const badge=it.type==='combo'?'<span class="badge">Combo</span>':'<span class="badge">Extra</span>';
     row.innerHTML=`<div><b>${it.name}</b> ${badge}
        <div class="small">Precio catálogo: ${money(num(it.price))}</div>
@@ -840,21 +977,31 @@ function renderCatalog(){
          <button class="ghost" data-save="${it.id}" type="button">Guardar</button>
          <button class="ghost" data-del="${it.id}" type="button">Eliminar</button>
          <button class="ghost" data-view="${it.id}" type="button">Galería</button>
-       </div></div>`; exList.appendChild(row);
+       </div></div>`;
+    exList.appendChild(row);
   });
   exList.querySelectorAll('button[data-save]').forEach(b=>{
-    b.onclick=async ()=>{ const id=b.dataset.save; const name=exList.querySelector(`input.name[data-id="${id}"]`).value.trim();
-      let price=num(exList.querySelector(`input.price[data-id="${id}"]`).value); const type=exList.querySelector(`select.kind[data-id="${id}"]`).value;
+    b.onclick=async ()=>{
+      const id=b.dataset.save;
+      const name=exList.querySelector(`input.name[data-id="${id}"]`).value.trim();
+      let price=num(exList.querySelector(`input.price[data-id="${id}"]`).value);
+      const type=exList.querySelector(`select.kind[data-id="${id}"]`).value;
       const idx=extras.findIndex(x=>x.id===id); extras[idx]={...extras[idx],name,price,type};
-      if(isAuthed()) await UCOL('extras').doc(id).set(extras[idx]); store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
+      if(isAuthed()) await UCOL('extras').doc(id).set(extras[idx]);
+      store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
     };
   });
-  exList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=async ()=>{ if(!confirm('Eliminar ítem?')) return;
-    extras=extras.filter(x=>x.id!==b.dataset.del); if(isAuthed()) await UCOL('extras').doc(b.dataset.del).delete(); store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
+  exList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=async ()=>{
+    if(!confirm('Eliminar ítem?')) return;
+    extras=extras.filter(x=>x.id!==b.dataset.del);
+    if(isAuthed()) await UCOL('extras').doc(b.dataset.del).delete();
+    store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
   });
   exList.querySelectorAll('button[data-view]').forEach(b=> b.onclick=()=> loadGallery(b.dataset.view));
 }
-exCreate.addEventListener('click', async ()=>{ const name=(exName.value||'').trim(); if(!name) return alert('Nombre requerido'); let price=num(exPrice.value||0); if(price<=0) return alert('Precio inválido');
+exCreate.addEventListener('click', async ()=>{
+  const name=(exName.value||'').trim(); if(!name) return alert('Nombre requerido');
+  let price=num(exPrice.value||0); if(price<=0) return alert('Precio inválido');
   const id=uid(); const obj={id,type:exType.value,name,price};
   extras.unshift(obj); if(isAuthed()) await UCOL('extras').doc(id).set(obj);
   store.set(K.EXTRAS, extras); exName.value=''; exPrice.value=''; fillCatalogSelects(); renderCatalog();
@@ -868,23 +1015,29 @@ drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag
 drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
 drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');selectedFiles=Array.from(e.dataTransfer.files||[]);alert(`${selectedFiles.length} archivo(s) listos`);});
 fileInput.addEventListener('change',()=> selectedFiles = Array.from(fileInput.files||[]));
-btnUpload.addEventListener('click', async ()=>{ const id=exSelectFiles.value; if(!id) return alert('Elegí un ítem'); if(!selectedFiles.length) return alert('Seleccioná archivos');
+btnUpload.addEventListener('click', async ()=>{
+  const id=exSelectFiles.value; if(!id) return alert('Elegí un ítem'); if(!selectedFiles.length) return alert('Seleccioná archivos');
   mediaMap[id]=mediaMap[id]||[];
-  for(const f of selectedFiles){ const dataUrl=await fileToDataUrl(f); if((dataUrl||'').length>okMediaSize){ alert(`"${f.name}" pesa mucho. Pegá un enlace en su lugar.`); continue; }
+  for(const f of selectedFiles){
+    const dataUrl=await fileToDataUrl(f);
+    if((dataUrl||'').length>okMediaSize){ alert(`"${f.name}" pesa mucho. Pegá un enlace en su lugar.`); continue; }
     mediaMap[id].unshift({name:f.name,type:f.type||'file',dataUrl,at:Date.now()});
   }
   selectedFiles=[]; fileInput.value='';
   if(isAuthed()) await UCOL('media').doc(id).set({arr:mediaMap[id]}); store.set(K.MEDIA, mediaMap);
   alert('Archivos guardados'); await loadGallery(id);
 });
-btnAddLink.addEventListener('click', async ()=>{ const id=exSelectFiles.value; if(!id) return alert('Elegí un ítem'); const link=(exLink.value||'').trim(); if(!isHttp(link)) return alert('Pegá un enlace válido');
+btnAddLink.addEventListener('click', async ()=>{
+  const id=exSelectFiles.value; if(!id) return alert('Elegí un ítem');
+  const link=(exLink.value||'').trim(); if(!isHttp(link)) return alert('Pegá un enlace válido');
   mediaMap[id]=mediaMap[id]||[]; mediaMap[id].unshift({name:link.split('/').pop(),type:'link',url:link,at:Date.now()});
   if(isAuthed()) await UCOL('media').doc(id).set({arr:mediaMap[id]}); store.set(K.MEDIA, mediaMap); exLink.value=''; await loadGallery(id);
 });
 async function loadGallery(id){
   exMedia.innerHTML=''; const arr=mediaMap[id]||[];
   if(!arr.length){ exMedia.innerHTML='<div class="small">Sin archivos</div>'; return; }
-  arr.forEach(m=>{ const box=document.createElement('div'); box.className='media';
+  arr.forEach(m=>{
+    const box=document.createElement('div'); box.className='media';
     const pdf=(m.type||'').includes('pdf') || (m.url||'').toLowerCase().endsWith('.pdf') || (m.dataUrl||'').startsWith('data:application/pdf');
     const imgUrl=m.dataUrl||m.url;
     if(pdf){ box.innerHTML=`<div>PDF</div><a class="link" href="${imgUrl}" target="_blank">Abrir</a>`; }
@@ -895,25 +1048,62 @@ async function loadGallery(id){
 }
 
 /* ===== Totales y listado eventos ===== */
-function computeTotals(ev){ const base=(ev.people||0)*(ev.pricePer||0); const adj=ev.adjustmentsTotal||0;
+function baseOf(ev){
+  const pricePer = num(ev.pricePer||0);
+  const priceAfter = num(ev.priceAfter||0);
+  const priceAfterKids = num(ev.priceAfterKids||0);
+  const ad = Math.max(0, num(ev.adultsDinner||0));
+  const kd = Math.max(0, num(ev.kidsDinner||0));
+  const aa = Math.max(0, num(ev.adultsAfter||0));
+  const ka = Math.max(0, num(ev.kidsAfter||0));
+  const dinner = ad*pricePer + kd*(pricePer*0.5);
+  const afters = aa*priceAfter + ka*priceAfterKids;
+  return dinner + afters;
+}
+function computeTotals(ev){
+  const base = baseOf(ev);
+  const adj=ev.adjustmentsTotal||0;
   let extrasTotal=0; (ev.items||[]).forEach(it=> extrasTotal += num(it.overridePrice??it.price)*num(it.qty||1));
-  let paid=0; (ev.payments||[]).forEach(p=> paid += num(p.amount)); const total=base+adj+extrasTotal; const remain=Math.max(0,total-paid);
-  return {base,adj,extrasTotal,total,paid,remain,pricePer:ev.pricePer||0,people:ev.people||0};
+  let paid=0; (ev.payments||[]).forEach(p=> paid += num(p.amount));
+  const total=base+adj+extrasTotal; const remain=Math.max(0,total-paid);
+  return {
+    base, adj, extrasTotal, total, paid, remain,
+    pricePer:num(ev.pricePer||0),
+    priceAfter:num(ev.priceAfter||0),
+    priceAfterKids:num(ev.priceAfterKids||0),
+    ad:Math.max(0,num(ev.adultsDinner||0)),
+    kd:Math.max(0,num(ev.kidsDinner||0)),
+    aa:Math.max(0,num(ev.adultsAfter||0)),
+    ka:Math.max(0,num(ev.kidsAfter||0))
+  };
 }
 function renderEventList(){
   const q=(evSearch.value||'').toLowerCase(); const prov=getActiveProvince();
-  evList.innerHTML=''; events.filter(e=> (e.name||'').toLowerCase().includes(q)).filter(e=> prov==='Todos'?true:((e.province||'San Juan')===prov)).forEach(e=>{
-    const totals=computeTotals(e); const div=document.createElement('div'); div.className='item';
-    const meta=`${e.type||'-'} • ${e.date||'sin fecha'} • ${e.province||'San Juan'}`; const opt=e.optionLabel||'—'; const salonTxt=e.salon?` • Salón: ${e.salon}`:'';
-    div.innerHTML=`<div><b>${e.name||'-'}</b><div class="small">${meta}${salonTxt}</div></div>
-                   <div class="inline">
-                     <span class="small">Opción: <b>${opt}</b></span>
-                     <span class="small">Precio/Persona: <b>${money(e.pricePer||0)}</b></span>
-                     <span class="small">Faltante: <b>${money(totals.remain)}</b></span>
-                     <button class="ghost" data-open="${e.id}">Abrir</button>
-                     <button class="ghost" data-del="${e.id}">Eliminar</button>
-                   </div>`; evList.appendChild(div);
-  });
+  evList.innerHTML='';
+  events
+    .filter(e=> (e.name||'').toLowerCase().includes(q))
+    .filter(e=> prov==='Todos'?true:((e.province||'San Juan')===prov))
+    .forEach(e=>{
+      const t=computeTotals(e);
+      const meta=`${e.type||'-'} • ${e.date||'sin fecha'} • ${e.province||'San Juan'}`;
+      const salonTxt=e.salon?` • Salón: ${e.salon}`:'';
+      const opt=e.optionLabel||'—';
+      const div=document.createElement('div'); div.className='item';
+      div.innerHTML=`
+        <div>
+          <b>${e.name||'-'}</b>
+          <div class="small">${meta}${salonTxt}</div>
+          <div class="small">Cena A:${t.ad} • N:${t.kd} | Después A:${t.aa} • N:${t.ka}</div>
+        </div>
+        <div class="inline">
+          <span class="small">Opción: <b>${opt}</b></span>
+          <span class="small">Precio cena: <b>${money(e.pricePer||0)}</b></span>
+          <span class="small">Faltante: <b>${money(t.remain)}</b></span>
+          <button class="ghost" data-open="${e.id}">Abrir</button>
+          <button class="ghost" data-del="${e.id}">Eliminar</button>
+        </div>`;
+      evList.appendChild(div);
+    });
   evList.querySelectorAll('button[data-open]').forEach(b=> b.onclick=()=> openEventPanel(b.dataset.open));
   evList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=()=> deleteEventDeep(b.dataset.del));
 }
@@ -922,9 +1112,13 @@ evSearch.addEventListener('input', renderEventList);
 /* ===== Panel evento ===== */
 pClose.addEventListener('click', ()=> evPanelBk.style.display='none');
 pDelete.addEventListener('click', ()=> currentEventId && deleteEventDeep(currentEventId));
-function openEventPanel(id){ currentEventId=id; const ev=events.find(x=>x.id===id)||{};
-  pEvName.textContent=ev.name||'Evento'; pEvMeta.textContent=`${ev.type||'-'} • ${ev.date||'sin fecha'} • ${ev.province||'San Juan'}`; editSalon.value=ev.salon||'';
-  renderEventItems(); renderPayments(); refreshSummary(); evPanelBk.style.display='flex';
+function openEventPanel(id){
+  currentEventId=id; const ev=events.find(x=>x.id===id)||{};
+  pEvName.textContent=ev.name||'Evento';
+  pEvMeta.textContent=`${ev.type||'-'} • ${ev.date||'sin fecha'} • ${ev.province||'San Juan'}`;
+  editSalon.value=ev.salon||'';
+  renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(ev);
+  evPanelBk.style.display='flex';
 }
 
 /* ===== Guardar cambios ===== */
@@ -934,18 +1128,58 @@ async function persistEvent(ev){
 }
 
 /* ===== Salón ===== */
-saveSalon.addEventListener('click', async ()=>{ if(!currentEventId) return; const ev=events.find(e=>e.id===currentEventId); ev.salon=(editSalon.value||'').trim()||null; await persistEvent(ev); refreshSummary(); renderEventList(); });
+saveSalon.addEventListener('click', async ()=>{
+  if(!currentEventId) return;
+  const ev=events.find(e=>e.id===currentEventId); ev.salon=(editSalon.value||'').trim()||null;
+  await persistEvent(ev); refreshSummary(); renderEventList();
+});
+
+/* ===== Editar personas & precios después de cena ===== */
+function fillEditPeople(ev){
+  edAdultsDinner.value = ev.adultsDinner||0;
+  edKidsDinner.value   = ev.kidsDinner||0;
+  edAdultsAfter.value  = ev.adultsAfter||0;
+  edKidsAfter.value    = ev.kidsAfter||0;
+  edPriceAfter.value   = num(ev.priceAfter||0) || '';
+  edPriceAfterKids.value = num(ev.priceAfterKids||0) || '';
+}
+savePeople.addEventListener('click', async ()=>{
+  if(!currentEventId) return;
+  const ev=events.find(e=>e.id===currentEventId);
+  ev.adultsDinner = Math.max(0,num(edAdultsDinner.value));
+  ev.kidsDinner   = Math.max(0,num(edKidsDinner.value));
+  ev.adultsAfter  = Math.max(0,num(edAdultsAfter.value));
+  ev.kidsAfter    = Math.max(0,num(edKidsAfter.value));
+  ev.priceAfter   = Math.max(0,num(edPriceAfter.value));
+  ev.priceAfterKids = Math.max(0,num(edPriceAfterKids.value));
+  // Recalcular baseTotal informativo
+  ev.baseTotal = baseOf(ev);
+  await persistEvent(ev);
+  refreshSummary(); renderEventList();
+  alert('Cantidades y precios actualizados ✅');
+});
 
 /* ===== Ítems del evento ===== */
-addExtraToEvent.addEventListener('click', async ()=>{ if(!currentEventId) return alert('Abrí un evento');
-  const id=exForEvent.value; if(!id) return alert('Elegí un ítem'); const base=extras.find(x=>x.id===id); const qty=Math.max(1,num(exQty.value));
-  const override=exPriceOverride.value===''?null:num(exPriceOverride.value); const ev=events.find(e=>e.id===currentEventId); ev.items=ev.items||[];
+addExtraToEvent.addEventListener('click', async ()=>{
+  if(!currentEventId) return alert('Abrí un evento');
+  const id=exForEvent.value; if(!id) return alert('Elegí un ítem');
+  const base=extras.find(x=>x.id===id);
+  const qty=Math.max(1,num(exQty.value));
+  const override=exPriceOverride.value===''?null:num(exPriceOverride.value);
+  const ev=events.find(e=>e.id===currentEventId); ev.items=ev.items||[];
   ev.items.unshift({itemId:id,type:base.type||'extra',name:base.name,price:num(base.price||0),overridePrice:override,qty});
-  await persistEvent(ev); exQty.value='1'; exPriceOverride.value=''; renderEventItems(); refreshSummary(); renderEventList();
+  await persistEvent(ev); exQty.value='1'; exPriceOverride.value='';
+  renderEventItems(); refreshSummary(); renderEventList();
 });
-function renderEventItems(){ const ev=events.find(e=>e.id===currentEventId); evExtrasList.innerHTML=''; if(!ev){ evExtrasTotal.textContent=money(0); return; }
-  let total=0; (ev.items||[]).forEach((e,idx)=>{ const price=num(e.overridePrice ?? e.price); const sub=price*num(e.qty||1); total+=sub;
-    const row=document.createElement('div'); row.className='item'; const chip=e.type==='combo' ? '<span class="badge">Combo</span>' : '<span class="badge">Extra</span>';
+function renderEventItems(){
+  const ev=events.find(e=>e.id===currentEventId);
+  evExtrasList.innerHTML=''; if(!ev){ evExtrasTotal.textContent=money(0); return; }
+  let total=0;
+  (ev.items||[]).forEach((e,idx)=>{
+    const price=num(e.overridePrice ?? e.price);
+    const sub=price*num(e.qty||1); total+=sub;
+    const row=document.createElement('div'); row.className='item';
+    const chip=e.type==='combo' ? '<span class="badge">Combo</span>' : '<span class="badge">Extra</span>';
     row.innerHTML=`<div><b>${e.name}</b> ${chip}
       <div class="small">Precio: ${money(price)} — Cant: ${e.qty} — Subtotal: <b>${money(sub)}</b></div>
       <div class="inline" style="margin-top:6px">
@@ -953,23 +1187,55 @@ function renderEventItems(){ const ev=events.find(e=>e.id===currentEventId); evE
         <input type="number" class="qty" value="${e.qty}" min="1" data-idx="${idx}">
         <button class="ghost" data-upd="${idx}" type="button">Actualizar</button>
         <button class="ghost" data-del="${idx}" type="button">Quitar</button>
-      </div></div>`; evExtrasList.appendChild(row);
+      </div></div>`;
+    evExtrasList.appendChild(row);
   });
   evExtrasTotal.textContent=money(total);
-  evExtrasList.querySelectorAll('button[data-upd]').forEach(b=> b.onclick=async ()=>{ const i=+b.dataset.upd; const ev=events.find(e=>e.id===currentEventId);
-    let p=num(evExtrasList.querySelector(`input.price[data-idx="${i}"]`).value); const q=Math.max(1,num(evExtrasList.querySelector(`input.qty[data-idx="${i}"]`).value));
-    ev.items[i].overridePrice=p; ev.items[i].qty=q; await persistEvent(ev); renderEventItems(); refreshSummary(); renderEventList(); });
-  evExtrasList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=async ()=>{ const i=+b.dataset.del; const ev=events.find(e=>e.id===currentEventId); ev.items.splice(i,1); await persistEvent(ev); renderEventItems(); refreshSummary(); renderEventList(); });
+  evExtrasList.querySelectorAll('button[data-upd]').forEach(b=> b.onclick=async ()=>{
+    const i=+b.dataset.upd; const ev=events.find(e=>e.id===currentEventId);
+    let p=num(evExtrasList.querySelector(`input.price[data-idx="${i}"]`).value);
+    const q=Math.max(1,num(evExtrasList.querySelector(`input.qty[data-idx="${i}"]`).value));
+    ev.items[i].overridePrice=p; ev.items[i].qty=q; await persistEvent(ev);
+    renderEventItems(); refreshSummary(); renderEventList();
+  });
+  evExtrasList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=async ()=>{
+    const i=+b.dataset.del; const ev=events.find(e=>e.id===currentEventId); ev.items.splice(i,1);
+    await persistEvent(ev); renderEventItems(); refreshSummary(); renderEventList();
+  });
 }
-evClearExtras.addEventListener('click', async ()=>{ const ev=events.find(e=>e.id===currentEventId); ev.items=[]; await persistEvent(ev); renderEventItems(); refreshSummary(); renderEventList(); });
+evClearExtras.addEventListener('click', async ()=>{
+  const ev=events.find(e=>e.id===currentEventId); ev.items=[];
+  await persistEvent(ev); renderEventItems(); refreshSummary(); renderEventList();
+});
 
 /* ===== Resumen / pagos / ajustes / recibos ===== */
-function refreshSummary(){ const ev=events.find(e=>e.id===currentEventId); if(!ev){ [sumBase,sumAdj,sumExtras,sumTotal,sumPaid,sumRemain,sumPeople,sumPricePer,sumSalon].forEach(el=>el.textContent=money(0)); return; }
-  const t=computeTotals(ev); sumSalon.textContent=ev.salon||'—'; sumPeople.textContent=t.people; sumPricePer.textContent=money(t.pricePer);
-  sumBase.textContent=money(t.base); sumAdj.textContent=money(t.adj); sumExtras.textContent=money(t.extrasTotal); sumTotal.textContent=money(t.total); sumPaid.textContent=money(t.paid); sumRemain.textContent=money(t.remain); payTotal.textContent=money(t.paid);
+function refreshSummary(){
+  const ev=events.find(e=>e.id===currentEventId);
+  if(!ev){
+    [sumBase,sumAdj,sumExtras,sumTotal,sumPaid,sumRemain,sumPricePer].forEach(el=>el.textContent=money(0));
+    [sumAdultsDinner,sumKidsDinner,sumAdultsAfter,sumKidsAfter].forEach(el=>el.textContent='0');
+    sumSalon.textContent='—'; sumAfterPrices.textContent=`${money(0)} / ${money(0)}`; return;
+  }
+  const t=computeTotals(ev);
+  sumSalon.textContent=ev.salon||'—';
+  sumAdultsDinner.textContent=t.ad;
+  sumKidsDinner.textContent=t.kd;
+  sumAdultsAfter.textContent=t.aa;
+  sumKidsAfter.textContent=t.ka;
+  sumPricePer.textContent=money(t.pricePer);
+  sumAfterPrices.textContent=`${money(t.priceAfter)} / ${money(t.priceAfterKids)}`;
+  sumBase.textContent=money(t.base);
+  sumAdj.textContent=money(t.adj);
+  sumExtras.textContent=money(t.extrasTotal);
+  sumTotal.textContent=money(t.total);
+  sumPaid.textContent=money(t.paid);
+  sumRemain.textContent=money(t.remain);
+  payTotal.textContent=money(t.paid);
 }
-function renderPayments(){ const ev=events.find(e=>e.id===currentEventId); payList.innerHTML=''; if(!ev) return;
-  (ev.payments||[]).slice().reverse().forEach(p=>{ const proofHtml=p.proofUrl?`<a class="link" data-proof="${p.proofUrl}" data-kind="${p.proofKind==='pdf'?'pdf':'img'}">${/^http/i.test(p.proofUrl)?'Ver comprobante':'Ver ('+(p.proofKind==='pdf'?'PDF':'imagen')+')'}</a>`:'<span class="small">Sin comprobante</span>';
+function renderPayments(){
+  const ev=events.find(e=>e.id===currentEventId); payList.innerHTML=''; if(!ev) return;
+  (ev.payments||[]).slice().reverse().forEach(p=>{
+    const proofHtml=p.proofUrl?`<a class="link" data-proof="${p.proofUrl}" data-kind="${p.proofKind==='pdf'?'pdf':'img'}">${/^http/i.test(p.proofUrl)?'Ver comprobante':'Ver ('+(p.proofKind==='pdf'?'PDF':'imagen')+')'}</a>`:'<span class="small">Sin comprobante</span>';
     const div=document.createElement('div'); div.className='item';
     div.innerHTML=`<div><b>${p.client||'Cliente'}</b>
         <div class="small">${new Date(p.at).toLocaleString('es-AR')} — ${p.method}</div>
@@ -979,7 +1245,8 @@ function renderPayments(){ const ev=events.find(e=>e.id===currentEventId); payLi
       <div class="inline">
         <button class="ghost" data-receipt="${p.id}">Recibo</button>
         <button class="ghost" data-delpay="${p.id}">Eliminar</button>
-      </div>`; payList.appendChild(div);
+      </div>`;
+    payList.appendChild(div);
   });
   payList.querySelectorAll('a[data-proof]').forEach(a=> a.onclick=()=> openProof(a.dataset.proof, a.dataset.kind));
   payList.querySelectorAll('button[data-receipt]').forEach(b=> b.onclick=()=> generateReceipt(currentEventId,b.dataset.receipt));
@@ -989,15 +1256,25 @@ function openProof(url, kind){ if(!url) return; const w=window.open('', '_blank'
   if(kind==='pdf' || /\.pdf($|\?)/i.test(url) || url.startsWith('data:application/pdf')){ w.document.write(`<embed src="${url}" type="application/pdf" style="border:0;width:100%;height:100%"/>`); }
   else{ w.document.write(`<img src="${url}" style="max-width:100%;height:auto;display:block" />`); }
 }
-async function deletePayment(pid){ const ev=events.find(e=>e.id===currentEventId); ev.payments=ev.payments.filter(p=>p.id!==pid); await persistEvent(ev); renderPayments(); refreshSummary(); renderEventList(); }
+async function deletePayment(pid){
+  const ev=events.find(e=>e.id===currentEventId); ev.payments=ev.payments.filter(p=>p.id!==pid);
+  await persistEvent(ev); renderPayments(); refreshSummary(); renderEventList();
+}
 
-function loadProofFromFile(file){ const okType=/^image\//i.test(file.type)||file.type==='application/pdf'||/\.pdf$/i.test(file.name); if(!okType) return alert('Solo imagen o PDF');
-  if(file.size>1.8*1024*1024) return alert('El archivo supera 1.8 MB'); const r=new FileReader(); r.onload=()=>{ lastUploadedProofUrl=r.result; lastUploadedProofKind = file.type==='application/pdf'||/\.pdf$/i.test(file.name) ? 'pdf' : 'image'; proofStatus.textContent= lastUploadedProofKind==='pdf' ? 'Comprobante listo (PDF) ✔' : 'Comprobante listo (imagen) ✔'; }; r.readAsDataURL(file);
+function loadProofFromFile(file){
+  const okType=/^image\//i.test(file.type)||file.type==='application/pdf'||/\.pdf$/i.test(file.name); if(!okType) return alert('Solo imagen o PDF');
+  if(file.size>1.8*1024*1024) return alert('El archivo supera 1.8 MB');
+  const r=new FileReader();
+  r.onload=()=>{ lastUploadedProofUrl=r.result; lastUploadedProofKind = file.type==='application/pdf'||/\.pdf$/i.test(file.name) ? 'pdf' : 'image';
+    proofStatus.textContent= lastUploadedProofKind==='pdf' ? 'Comprobante listo (PDF) ✔' : 'Comprobante listo (imagen) ✔';
+  };
+  r.readAsDataURL(file);
 }
 payProof.addEventListener('change', ()=>{ if(payProof.files && payProof.files[0]) loadProofFromFile(payProof.files[0]); });
 payUpload.addEventListener('click', ()=>{ if(!payProof.files || !payProof.files.length) return alert('Elegí un archivo (imagen o PDF)'); loadProofFromFile(payProof.files[0]); });
 payUseLink.addEventListener('click', ()=>{ const link=(payProofLink.value||'').trim(); if(!isHttp(link)) return alert('Pegá un enlace http/https válido'); lastUploadedProofUrl=link; lastUploadedProofKind=/\.pdf($|\?)/i.test(link)?'pdf':'link'; proofStatus.textContent='Comprobante listo (enlace) ✔'; });
-paySave.addEventListener('click', async ()=>{ if(!currentEventId) return alert('Abrí un evento');
+paySave.addEventListener('click', async ()=>{
+  if(!currentEventId) return alert('Abrí un evento');
   const amount=num(payAmount.value); if(amount<=0) return alert('Monto inválido'); if(!lastUploadedProofUrl) return alert('Subí o pegá el COMPROBANTE (obligatorio)');
   const ev=events.find(e=>e.id===currentEventId); ev.payments=ev.payments||[];
   ev.payments.push({id:uid(), client:(payClient.value||'').trim()||'Cliente', amount, method:payMethod.value, proofUrl:lastUploadedProofUrl, proofKind:lastUploadedProofKind||'link', at:Date.now()});
@@ -1018,27 +1295,59 @@ async function nextSeqAny(){
   }
 }
 
-/* ===== Reprecio ===== */
-btnReprice.addEventListener('click', async ()=>{ if(!currentEventId) return alert('Abrí un evento');
-  const ev=events.find(e=>e.id===currentEventId); const newP=num(newPricePer.value); if(newP<=0) return alert('Nuevo precio inválido');
-  const oldP=num(ev.pricePer||0); const P=num(ev.people||0); const paid=(ev.payments||[]).reduce((a,p)=> a+num(p.amount),0);
-  const pplPaidEquiv=Math.min(P, Math.floor(paid/Math.max(1,oldP))); const remainingPeople=Math.max(0,P-pplPaidEquiv); const delta=(newP-oldP)*remainingPeople;
-  ev.pricePer=newP; ev.adjustments=ev.adjustments||[]; const note=`Reprecio: ${money(oldP)} → ${money(newP)} (sobre ${remainingPeople} pendientes)`; ev.adjustments.push({amount:delta,note,at:Date.now()});
-  ev.adjustmentsTotal=num(ev.adjustmentsTotal||0)+delta; await persistEvent(ev); newPricePer.value=''; refreshSummary(); renderEventList(); alert('Precio actualizado ✅');
+/* ===== Reprecio (solo cena) ===== */
+btnReprice.addEventListener('click', async ()=>{
+  if(!currentEventId) return alert('Abrí un evento');
+  const ev=events.find(e=>e.id===currentEventId);
+  const newP=num(newPricePer.value); if(newP<=0) return alert('Nuevo precio inválido');
+
+  const oldP=num(ev.pricePer||0);
+  const ad=Math.max(0,num(ev.adultsDinner||0));
+  const kd=Math.max(0,num(ev.kidsDinner||0));
+  const dinnerUnits = ad + 0.5*kd; // adulto=1, niño=0.5
+
+  // Monto de cena al precio anterior
+  const dinnerOldAmount = dinnerUnits * oldP;
+
+  // Pagos totales (asumimos cubren cena primero para estimar pendientes)
+  const paid=(ev.payments||[]).reduce((a,p)=> a+num(p.amount),0);
+  const remainingDinnerAmount = Math.max(0, dinnerOldAmount - paid);
+  const remainingUnits = Math.min(dinnerUnits, remainingDinnerAmount / Math.max(1,oldP));
+
+  const delta = (newP - oldP) * remainingUnits;
+
+  ev.pricePer=newP;
+  ev.adjustments=ev.adjustments||[];
+  const note=`Reprecio cena: ${money(oldP)} → ${money(newP)} (sobre ${remainingUnits.toFixed(2)} unidades pendientes)`;
+  ev.adjustments.push({amount:delta,note,at:Date.now()});
+  ev.adjustmentsTotal=num(ev.adjustmentsTotal||0)+delta;
+
+  await persistEvent(ev); newPricePer.value='';
+  refreshSummary(); renderEventList(); alert('Precio de cena actualizado ✅');
 });
 
 /* ===== Ajustes ===== */
-adjApply.addEventListener('click', async ()=>{ const ev=events.find(e=>e.id===currentEventId); if(!ev) return alert('Abrí un evento');
-  const base=(ev.people||0)*(ev.pricePer||0), adjPrev=ev.adjustmentsTotal||0, people=ev.people||0;
+adjApply.addEventListener('click', async ()=>{
+  const ev=events.find(e=>e.id===currentEventId); if(!ev) return alert('Abrí un evento');
+  const base=baseOf(ev), adjPrev=ev.adjustmentsTotal||0;
   const exTotal=(ev.items||[]).reduce((a,it)=> a + num(it.overridePrice??it.price)*num(it.qty||1),0);
-  const paid=(ev.payments||[]).reduce((a,p)=> a + num(p.amount),0); const total=base+adjPrev+exTotal; const saldo=Math.max(0,total-paid);
-  const pct=num(adjPercent.value), amt=num(adjAmount.value), perHead=num(adjPerHead.value); let aumento=0, note='';
-  if(perHead>0){ aumento=perHead*people; note=`Aumento ${money(perHead)} por persona × ${people}`; }
+  const paid=(ev.payments||[]).reduce((a,p)=> a + num(p.amount),0);
+  const total=base+adjPrev+exTotal; const saldo=Math.max(0,total-paid);
+
+  const pct=num(adjPercent.value), amt=num(adjAmount.value), perHead=num(adjPerHead.value);
+  let aumento=0, note='';
+  const totalHeads = (ev.adultsDinner||0)+(ev.kidsDinner||0)+(ev.adultsAfter||0)+(ev.kidsAfter||0);
+
+  if(perHead>0){ aumento=perHead*totalHeads; note=`Aumento ${money(perHead)} por persona × ${totalHeads}`; }
   else if(amt>0){ aumento=amt; note='Aumento fijo'; }
   else if(pct>0){ aumento=saldo*(pct/100); note=`Aumento ${pct}% sobre saldo`; }
   else return alert('Ingresá un valor en % ó monto fijo ó por persona');
-  ev.adjustments=ev.adjustments||[]; ev.adjustments.push({amount:aumento,note,at:Date.now()}); ev.adjustmentsTotal=(ev.adjustmentsTotal||0)+aumento;
-  adjPercent.value=''; adjAmount.value=''; adjPerHead.value=''; await persistEvent(ev); refreshSummary(); renderEventList(); alert('Ajuste aplicado ✅');
+
+  ev.adjustments=ev.adjustments||[]; ev.adjustments.push({amount:aumento,note,at:Date.now()});
+  ev.adjustmentsTotal=(ev.adjustmentsTotal||0)+aumento;
+
+  adjPercent.value=''; adjAmount.value=''; adjPerHead.value='';
+  await persistEvent(ev); refreshSummary(); renderEventList(); alert('Ajuste aplicado ✅');
 });
 
 /* ===== Recibos (PDF) ===== */
@@ -1063,10 +1372,16 @@ async function generateReceipt(eventId, paymentId){
   const y1=y0+14;
   doc.rect(16, y1, 92, 12); doc.text('Salón', 18, y1+5); doc.setFont('helvetica','bold'); doc.text(doc.splitTextToSize(ev.salon||'—',88), 18, y1+9); doc.setFont('helvetica','normal');
   doc.rect(110,y1, 45, 12); doc.text('Opción/Plan', 112, y1+5); doc.setFont('helvetica','bold'); doc.text(doc.splitTextToSize(ev.optionLabel||'—',41), 112, y1+9); doc.setFont('helvetica','normal');
-  doc.rect(157,y1, 43, 12); doc.text('Precio opción actual', 159, y1+5); doc.setFont('helvetica','bold'); doc.text(money(ev.pricePer||0), 159, y1+9); doc.setFont('helvetica','normal');
+  doc.rect(157,y1, 43, 12); doc.text('Precio cena actual', 159, y1+5); doc.setFont('helvetica','bold'); doc.text(money(ev.pricePer||0), 159, y1+9); doc.setFont('helvetica','normal');
+
+  const y1b=y1+14;
+  doc.rect(16, y1b, 92, 12); doc.text('Después de cena (A/N)', 18, y1b+5);
+  doc.setFont('helvetica','bold'); doc.text(`${money(t.priceAfter)} / ${money(t.priceAfterKids)}`, 18, y1b+9); doc.setFont('helvetica','normal');
+  doc.rect(110, y1b, 90, 12); doc.text('Personas (Cena / Después)', 112, y1b+5);
+  doc.setFont('helvetica','bold'); doc.text(`A:${t.ad} N:${t.kd} / A:${t.aa} N:${t.ka}`, 112, y1b+9); doc.setFont('helvetica','normal');
 
   const pagoFecha = new Date(p.at).toLocaleDateString('es-AR');
-  const y2 = y1+14;
+  const y2 = y1b+14;
   doc.rect(16, y2, 64, 12); doc.text('Fecha de pago', 18, y2+5); doc.setFont('helvetica','bold'); doc.text(pagoFecha, 18, y2+9); doc.setFont('helvetica','normal');
   doc.rect(82, y2, 118, 12); doc.text('Remito Nº', 84, y2+5); doc.setFont('helvetica','bold'); doc.text(remito, 140, y2+9, {align:'center'}); doc.setFont('helvetica','normal');
 
@@ -1096,16 +1411,17 @@ async function generateReceipt(eventId, paymentId){
 
   const TY = ry+16;
   doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Totales del evento', 16, TY);
-  doc.setLineWidth(0.2); doc.rect(16, TY+2, 184, 36);
+  doc.setLineWidth(0.2); doc.rect(16, TY+2, 184, 42);
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  doc.text(`Personas: ${t.people}`, 18, TY+10);
-  doc.text(`Precio cierre por persona (actual): ${money(t.pricePer)}`, 110, TY+10);
-  doc.text(`Total base: ${money(t.base)}`, 18, TY+18);
-  doc.text(`Ajustes: ${money(t.adj)}`, 110, TY+18);
-  doc.text(`Extras/Combos: ${money(t.extrasTotal)}`, 18, TY+26);
-  doc.setFont('helvetica','bold'); doc.text(`TOTAL: ${money(t.total)}`, 110, TY+26);
-  doc.setFont('helvetica','normal'); doc.text(`Abonado: ${money(t.paid)}`, 18, TY+34);
-  doc.setFont('helvetica','bold'); doc.text(`SALDO: ${money(t.remain)}`, 110, TY+34);
+  doc.text(`Cena — Adultos: ${t.ad} • Niños: ${t.kd}`, 18, TY+10);
+  doc.text(`Después — Adultos: ${t.aa} • Niños: ${t.ka}`, 110, TY+10);
+  doc.text(`Precio cena actual: ${money(t.pricePer)}`, 18, TY+18);
+  doc.text(`Precios después A/N: ${money(t.priceAfter)} / ${money(t.priceAfterKids)}`, 110, TY+18);
+  doc.text(`Total base: ${money(t.base)}`, 18, TY+26);
+  doc.text(`Ajustes: ${money(t.adj)}`, 110, TY+26);
+  doc.setFont('helvetica','bold'); doc.text(`TOTAL: ${money(t.total)}`, 18, TY+34);
+  doc.setFont('helvetica','normal'); doc.text(`Abonado: ${money(t.paid)}`, 110, TY+34);
+  doc.setFont('helvetica','bold'); doc.text(`SALDO: ${money(t.remain)}`, 18, TY+40);
 
   const safe=(ev.name||'evento').replace(/[^\p{L}\p{N}_-]+/gu,'_');
   doc.save(`Recibo_${remito}_${safe}.pdf`);
@@ -1126,11 +1442,12 @@ async function generateGeneralReceipt(eventId){
   doc.rect(16, y0, 90, 12); doc.text('Nombre del evento', 18, y0+5); doc.setFont('helvetica','bold'); doc.text(doc.splitTextToSize((ev.name||'-'),86), 18, y0+9); doc.setFont('helvetica','normal');
   doc.rect(108,y0, 30, 12); doc.text('Fecha evento', 110, y0+5); doc.setFont('helvetica','bold'); doc.text(ev.date||'-', 110, y0+9); doc.setFont('helvetica','normal');
   doc.rect(140,y0, 28, 12); doc.text('Provincia', 142, y0+5); doc.setFont('helvetica','bold'); doc.text(ev.province||'-', 142, y0+9); doc.setFont('helvetica','normal');
-  doc.rect(170,y0, 30, 12); doc.text('Precio opción', 172, y0+5); doc.setFont('helvetica','bold'); doc.text(money(ev.pricePer||0), 172, y0+9); doc.setFont('helvetica','normal');
+  doc.rect(170,y0, 30, 12); doc.text('Precio cena', 172, y0+5); doc.setFont('helvetica','bold'); doc.text(money(ev.pricePer||0), 172, y0+9); doc.setFont('helvetica','normal');
 
   const y1=y0+14; doc.rect(16, y1, 90, 12); doc.text('Salón', 18, y1+5); doc.setFont('helvetica','bold'); doc.text(doc.splitTextToSize(ev.salon||'—',86), 18, y1+9); doc.setFont('helvetica','normal');
   doc.rect(108,y1, 92, 12); doc.text('Opción/Plan', 110, y1+5); doc.setFont('helvetica','bold'); doc.text(doc.splitTextToSize(ev.optionLabel||'—',88), 110, y1+9); doc.setFont('helvetica','normal');
 
+  // Tabla de pagos
   let y = y1+16; const headerH=12, rowH=10;
   const cols=[ {x:16,w:28,title:'Fecha'},{x:44,w:58,title:'Cliente'},{x:102,w:32,title:'Método'},{x:134,w:30,title:'Monto'},{x:164,w:36,title:'Comprobante'} ];
   const tableW=cols.reduce((a,c)=>a+c.w,0);
@@ -1139,7 +1456,8 @@ async function generateGeneralReceipt(eventId){
 
   if(!(ev.payments||[]).length){ doc.rect(16,y,tableW,rowH); doc.text('— Sin pagos —', 18, y+7); y+=rowH; }
   else{
-    (ev.payments||[]).forEach((p,idx)=>{ const fecha=new Date(p.at).toLocaleDateString('es-AR'); const monto=money(p.amount);
+    (ev.payments||[]).forEach((p,idx)=>{
+      const fecha=new Date(p.at).toLocaleDateString('es-AR'); const monto=money(p.amount);
       doc.rect(16,y,tableW,rowH); cols.forEach(c=> doc.rect(c.x,y,c.w,rowH));
       doc.setFont('helvetica','normal'); doc.text(fecha, cols[0].x+2, y+7);
       doc.text((p.client||'Cliente').toString().slice(0,23), cols[1].x+2, y+7);
@@ -1148,27 +1466,33 @@ async function generateGeneralReceipt(eventId){
       doc.text('Abrir', cols[4].x+2, y+7);
       const rect={x:cols[4].x, y:y, w:cols[4].w, h:rowH};
       if(isHttp(p.proofUrl)){ doc.link(rect.x,rect.y,rect.w,rect.h,{url:p.proofUrl}); }
-      else if(/^data:image\//i.test(p.proofUrl)){ doc.addPage(); const target=doc.getNumberOfPages(); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(`Comprobante ${idx+1}`,14,18);
+      else if(/^data:image\//i.test(p.proofUrl)){
+        doc.addPage(); const target=doc.getNumberOfPages();
+        doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(`Comprobante ${idx+1}`,14,18);
         try{ doc.addImage(p.proofUrl,'JPEG',14,24,180,250,undefined,'FAST'); }catch(e){ doc.setFontSize(11); doc.text('No se pudo incrustar la imagen del comprobante.', 14, 30); }
         doc.setPage(1); doc.link(rect.x,rect.y,rect.w,rect.h,{pageNumber:target});
-      }else if(/^data:application\/pdf/i.test(p.proofUrl)){ const target = doc.getNumberOfPages()+1; doc.addPage(); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(`Comprobante PDF ${idx+1}`,14,18);
-        doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.textWithLink('Abrir PDF del comprobante', 14, 28, { url: p.proofUrl }); doc.setPage(1); doc.link(rect.x,rect.y,rect.w,rect.h,{pageNumber:target});
+      }else if(/^data:application\/pdf/i.test(p.proofUrl)){
+        const target = doc.getNumberOfPages()+1; doc.addPage();
+        doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(`Comprobante PDF ${idx+1}`,14,18);
+        doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.textWithLink('Abrir PDF del comprobante', 14, 28, { url: p.proofUrl });
+        doc.setPage(1); doc.link(rect.x,rect.y,rect.w,rect.h,{pageNumber:target});
       }
       y+=rowH; if(y>260){ doc.addPage(); y=20; }
     });
   }
 
   const TY=y+8; doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text('Totales del evento', 16, TY);
-  doc.setLineWidth(0.2); doc.rect(16, TY+2, 184, 36);
+  doc.setLineWidth(0.2); doc.rect(16, TY+2, 184, 42);
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  doc.text(`Personas: ${t.people}`, 18, TY+10);
-  doc.text(`Precio cierre por persona (actual): ${money(t.pricePer)}`, 110, TY+10);
-  doc.text(`Total base: ${money(t.base)}`, 18, TY+18);
-  doc.text(`Ajustes: ${money(t.adj)}`, 110, TY+18);
-  doc.text(`Extras/Combos: ${money(t.extrasTotal)}`, 18, TY+26);
-  doc.setFont('helvetica','bold'); doc.text(`TOTAL: ${money(t.total)}`, 110, TY+26);
-  doc.setFont('helvetica','normal'); doc.text(`Abonado: ${money(t.paid)}`, 18, TY+34);
-  doc.setFont('helvetica','bold'); doc.text(`SALDO: ${money(t.remain)}`, 110, TY+34);
+  doc.text(`Cena — Adultos: ${t.ad} • Niños: ${t.kd}`, 18, TY+10);
+  doc.text(`Después — Adultos: ${t.aa} • Niños: ${t.ka}`, 110, TY+10);
+  doc.text(`Precio cena: ${money(t.pricePer)}`, 18, TY+18);
+  doc.text(`Precios después A/N: ${money(t.priceAfter)} / ${money(t.priceAfterKids)}`, 110, TY+18);
+  doc.text(`Total base: ${money(t.base)}`, 18, TY+26);
+  doc.text(`Ajustes: ${money(t.adj)}`, 110, TY+26);
+  doc.setFont('helvetica','bold'); doc.text(`TOTAL: ${money(t.total)}`, 18, TY+34);
+  doc.setFont('helvetica','normal'); doc.text(`Abonado: ${money(t.paid)}`, 110, TY+34);
+  doc.setFont('helvetica','bold'); doc.text(`SALDO: ${money(t.remain)}`, 18, TY+40);
 
   const safe=(ev.name||'evento').replace(/[^\p{L}\p{N}_-]+/gu,'_'); doc.save(`Recibo_General_${remito}_${safe}.pdf`);
 }
