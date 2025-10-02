@@ -1,3 +1,17 @@
+Aquí tienes el **archivo completo** con todos los cambios pedidos listo para **copiar y pegar**:
+
+* Eliminado todo lo de **Ajustes** (UI, lógica y en los PDF).
+* El **reprecio** ahora:
+
+  * **Congela** al **precio viejo** las “unidades de cena” que ya estaban **pagadas** en el momento del cambio (adulto = 1, niño = 0.5), usando `repriceLocks`.
+  * Solo las **unidades pendientes** pasan al **nuevo precio**.
+  * No usa “ajustes” ni suma líneas extra: queda embebido en el cálculo base.
+* En el **panel de Resumen** agregué la línea **“Extras”** debajo de **“Precio después A/N”**.
+* En **ambos PDFs** agregué **“Extras”** debajo de **“Precios después A/N”** y quité la duplicación de **“Precio cena”** (solo queda arriba).
+
+---
+
+```html
 <!doctype html>
 <html lang="es">
 <head>
@@ -67,8 +81,8 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 #authBk{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:80}
 #authCard{background:#fff;border-radius:16px;padding:18px;max-width:480px;width:92%}
 .auth-tabs{display:flex;gap:6px;margin-bottom:10px}
-.auth-tabs .chip.active{background:#fff}
 .auth-tabs .chip{padding:8px 12px;border-radius:999px;background:#f7f7f7;border:1px solid #e8e8e8;cursor:pointer;font-weight:600}
+.auth-tabs .chip.active{background:#fff}
 </style>
 </head>
 <body>
@@ -363,7 +377,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
       </div>
     </div>
 
-    <!-- Resumen y edición -->
+    <!-- Resumen y ajustes -->
     <div class="row">
       <div class="col">
         <div class="card">
@@ -373,6 +387,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
           <div class="small">Después — Adultos: <b id="sumAdultsAfter">0</b> • Niños: <b id="sumKidsAfter">0</b></div>
           <div class="small">Precio/Persona (cena): <b id="sumPricePer">$ 0,00</b></div>
           <div class="small">Precio “después” Adultos/Niños: <b id="sumAfterPrices">$ 0,00 / $ 0,00</b></div>
+          <div class="small">Extras: <b id="sumExtrasInline">$ 0,00</b></div>
           <div class="small">Base: <b id="sumBase">$ 0,00</b> — Extras: <b id="sumExtras">$ 0,00</b></div>
           <div class="small">TOTAL: <b id="sumTotal" class="total">$ 0,00</b> — Abonado: <b id="sumPaid">$ 0,00</b> — SALDO: <b id="sumRemain" class="total">$ 0,00</b></div>
         </div>
@@ -409,8 +424,10 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <input id="newPricePer" type="text" placeholder="Nuevo precio cena" inputmode="decimal">
             <button id="btnReprice" type="button">Aplicar</button>
           </div>
-          <div class="small">Fija el <b>nuevo precio por persona</b>. Solo impacta <b>unidades pendientes</b> (las ya pagadas quedan congeladas).</div>
+          <div class="small">Ajusta <b>solo</b> el precio de cena. Afecta únicamente las <b>unidades pendientes</b> (adulto=1, niño=0.5); las ya pagadas quedan congeladas al precio anterior.</div>
         </div>
+
+        <!-- ⚠️ Se eliminó la tarjeta "Ajustes manuales" -->
       </div>
     </div>
 
@@ -787,7 +804,6 @@ const payTotal = document.getElementById('payTotal');
 const payList = document.getElementById('payList');
 
 const newPricePer = document.getElementById('newPricePer');
-const btnReprice = document.getElementById('btnReprice');
 
 const sumSalon = document.getElementById('sumSalon');
 const sumPricePer = document.getElementById('sumPricePer');
@@ -802,6 +818,7 @@ const sumKidsDinner = document.getElementById('sumKidsDinner');
 const sumAdultsAfter = document.getElementById('sumAdultsAfter');
 const sumKidsAfter = document.getElementById('sumKidsAfter');
 const sumAfterPrices = document.getElementById('sumAfterPrices');
+const sumExtrasInline = document.getElementById('sumExtrasInline');
 
 const editSalon = document.getElementById('editSalon');
 const saveSalon = document.getElementById('saveSalon');
@@ -878,6 +895,7 @@ async function handleCreateEvent(){
     kidsAfter:ka,
     items:[...newEventItems.map(x=>({...x}))],
     payments:[],
+    repriceLocks:[], // unidades de cena pagadas y congeladas a precio anterior
     createdAt:Date.now()
   };
 
@@ -889,6 +907,7 @@ async function handleCreateEvent(){
     events.unshift(payload); store.set(K.EVENTS, events);
   }
 
+  // reset
   evType.value='15 años'; evName.value=''; evDate.value='';
   evProvince.value='San Juan'; evSalon.value=''; evOption.value='';
   evPricePer.value=''; evPriceAfter.value=''; evPriceAfterKids.value='';
@@ -929,7 +948,8 @@ function updateNewPreview(){
     adultsDinner:Math.max(0,num(evAdultsDinner.value)),
     kidsDinner:Math.max(0,num(evKidsDinner.value)),
     adultsAfter:Math.max(0,num(evAdultsAfter.value)),
-    kidsAfter:Math.max(0,num(evKidsAfter.value))
+    kidsAfter:Math.max(0,num(evKidsAfter.value)),
+    repriceLocks:[]
   };
   const base = baseOf(tempEv);
   let ex=0; newEventItems.forEach(e=>{ const price=num(e.overridePrice ?? e.price); ex+=price*num(e.qty); });
@@ -1028,43 +1048,32 @@ async function loadGallery(id){
   });
 }
 
-/* ===== Unidades y “congelado” de cena ===== */
+/* ===== Totales y cálculo base con CONGELADO de unidades pagadas ===== */
 function dinnerUnits(ev){
   const ad = Math.max(0, num(ev.adultsDinner||0));
   const kd = Math.max(0, num(ev.kidsDinner||0));
-  return ad + 0.5*kd;
+  return ad + 0.5*kd; // adulto=1, niño=0.5
 }
-function frozenDinner(ev){
-  // Suma lo congelado por pagos previos; si supera las unidades totales, escala.
+function baseDinner(ev){
   const totalUnits = dinnerUnits(ev);
-  let units=0, amount=0;
-  (ev.payments||[]).forEach(p=>{
-    units += num(p.dinnerUnitsLocked||0);
-    amount += num(p.dinnerAmountLocked||0);
+  const locks = Array.isArray(ev.repriceLocks) ? ev.repriceLocks : [];
+  let lockedUnits=0, lockedAmount=0;
+  locks.forEach(l=>{
+    const u=Math.max(0,num(l.units)); const p=Math.max(0,num(l.price));
+    lockedUnits += u; lockedAmount += u*p;
   });
-  if(units>totalUnits && units>0){
-    const ratio = totalUnits/units;
-    return { units: totalUnits, amount: amount*ratio };
-  }
-  return { units, amount };
+  const currentUnits = Math.max(0, totalUnits - lockedUnits);
+  return lockedAmount + currentUnits * Math.max(0,num(ev.pricePer||0));
 }
-
-/* ===== Totales y listado ===== */
+function baseAfters(ev){
+  const priceAfter = Math.max(0,num(ev.priceAfter||0));
+  const priceAfterKids = Math.max(0,num(ev.priceAfterKids||0));
+  const aa = Math.max(0,num(ev.adultsAfter||0));
+  const ka = Math.max(0,num(ev.kidsAfter||0));
+  return aa*priceAfter + ka*priceAfterKids;
+}
 function baseOf(ev){
-  const pricePer = num(ev.pricePer||0);
-  const priceAfter = num(ev.priceAfter||0);
-  const priceAfterKids = num(ev.priceAfterKids||0);
-  const aa = Math.max(0, num(ev.adultsAfter||0));
-  const ka = Math.max(0, num(ev.kidsAfter||0));
-
-  const totalUnits = dinnerUnits(ev);
-  const {units:lockedUnits, amount:lockedAmount} = frozenDinner(ev);
-  const pendingUnits = Math.max(0, totalUnits - lockedUnits);
-
-  const dinnerCost = lockedAmount + pendingUnits*pricePer;
-  const afters = aa*priceAfter + ka*priceAfterKids;
-
-  return dinnerCost + afters;
+  return baseDinner(ev) + baseAfters(ev);
 }
 function computeTotals(ev){
   const base = baseOf(ev);
@@ -1218,7 +1227,7 @@ function refreshSummary(){
   if(!ev){
     [sumBase,sumExtras,sumTotal,sumPaid,sumRemain,sumPricePer].forEach(el=>el.textContent=money(0));
     [sumAdultsDinner,sumKidsDinner,sumAdultsAfter,sumKidsAfter].forEach(el=>el.textContent='0');
-    sumSalon.textContent='—'; sumAfterPrices.textContent=`${money(0)} / ${money(0)}`; return;
+    sumSalon.textContent='—'; sumAfterPrices.textContent=`${money(0)} / ${money(0)}`; sumExtrasInline.textContent=money(0); return;
   }
   const t=computeTotals(ev);
   sumSalon.textContent=ev.salon||'—';
@@ -1228,6 +1237,7 @@ function refreshSummary(){
   sumKidsAfter.textContent=t.ka;
   sumPricePer.textContent=money(t.pricePer);
   sumAfterPrices.textContent=`${money(t.priceAfter)} / ${money(t.priceAfterKids)}`;
+  sumExtrasInline.textContent=money(t.extrasTotal);
   sumBase.textContent=money(t.base);
   sumExtras.textContent=money(t.extrasTotal);
   sumTotal.textContent=money(t.total);
@@ -1239,13 +1249,10 @@ function renderPayments(){
   const ev=events.find(e=>e.id===currentEventId); payList.innerHTML=''; if(!ev) return;
   (ev.payments||[]).slice().reverse().forEach(p=>{
     const proofHtml=p.proofUrl?`<a class="link" data-proof="${p.proofUrl}" data-kind="${p.proofKind==='pdf'?'pdf':'img'}">${/^http/i.test(p.proofUrl)?'Ver comprobante':'Ver ('+(p.proofKind==='pdf'?'PDF':'imagen')+')'}</a>`:'<span class="small">Sin comprobante</span>';
-    // Info adicional opcional: unidades congeladas
-    const frozenInfo = (p.dinnerUnitsLocked>0) ? `<div class="small">Cena congelada: <b>${p.dinnerUnitsLocked.toFixed(2)}</b> u. × ${money(p.lockUnitPrice||0)} = <b>${money(p.dinnerAmountLocked||0)}</b></div>` : '';
     const div=document.createElement('div'); div.className='item';
     div.innerHTML=`<div><b>${p.client||'Cliente'}</b>
         <div class="small">${new Date(p.at).toLocaleString('es-AR')} — ${p.method}</div>
         <div class="small">Monto: <b>${money(p.amount)}</b></div>
-        ${frozenInfo}
         ${proofHtml}
       </div>
       <div class="inline">
@@ -1283,37 +1290,8 @@ paySave.addEventListener('click', async ()=>{
   if(!currentEventId) return alert('Abrí un evento');
   const amount=num(payAmount.value); if(amount<=0) return alert('Monto inválido'); if(!lastUploadedProofUrl) return alert('Subí o pegá el COMPROBANTE (obligatorio)');
   const ev=events.find(e=>e.id===currentEventId); ev.payments=ev.payments||[];
-
-  // --- Congelar unidades de cena cubiertas por este pago ---
-  const unitPriceNow = Math.max(0, num(ev.pricePer||0));
-  const totalUnits = dinnerUnits(ev);
-  const {units:prevLocked} = frozenDinner(ev);
-  const remainingUnits = Math.max(0, totalUnits - prevLocked);
-
-  let lockUnits = 0, lockAmount = 0;
-  if(unitPriceNow>0 && remainingUnits>0){
-    lockUnits = Math.min(remainingUnits, amount / unitPriceNow);
-    lockUnits = Math.max(0, lockUnits);
-    lockAmount = lockUnits * unitPriceNow;
-  }
-
-  ev.payments.push({
-    id:uid(),
-    client:(payClient.value||'').trim()||'Cliente',
-    amount,
-    method:payMethod.value,
-    proofUrl:lastUploadedProofUrl,
-    proofKind:lastUploadedProofKind||'link',
-    at:Date.now(),
-    // Nuevos campos:
-    dinnerUnitsLocked: lockUnits,
-    lockUnitPrice: unitPriceNow,
-    dinnerAmountLocked: lockAmount
-  });
-
-  payAmount.value=''; payClient.value=''; payProof.value=''; payProofLink.value='';
-  lastUploadedProofUrl=null; lastUploadedProofKind=null; proofStatus.textContent='Sin comprobante';
-
+  ev.payments.push({id:uid(), client:(payClient.value||'').trim()||'Cliente', amount, method:payMethod.value, proofUrl:lastUploadedProofUrl, proofKind:lastUploadedProofKind||'link', at:Date.now()});
+  payAmount.value=''; payClient.value=''; payProof.value=''; payProofLink.value=''; lastUploadedProofUrl=null; lastUploadedProofKind=null; proofStatus.textContent='Sin comprobante';
   await persistEvent(ev); renderPayments(); refreshSummary(); renderEventList(); alert('Pago registrado ✅');
 });
 
@@ -1330,17 +1308,40 @@ async function nextSeqAny(){
   }
 }
 
-/* ===== Reprecio (solo cena) — respeta unidades congeladas ===== */
-btnReprice.addEventListener('click', async ()=>{
+/* ===== Reprecio: congela unidades pagadas y actualiza precio actual ===== */
+document.getElementById('btnReprice').addEventListener('click', async ()=>{
   if(!currentEventId) return alert('Abrí un evento');
   const ev=events.find(e=>e.id===currentEventId);
   const newP=num(newPricePer.value); if(newP<=0) return alert('Nuevo precio inválido');
 
-  ev.pricePer=newP;
-  ev.baseTotal = baseOf(ev);
+  const oldP=Math.max(0,num(ev.pricePer||0));
+  if(newP===oldP){ newPricePer.value=''; return alert('El nuevo precio es igual al actual.'); }
 
+  // Unidades totales de cena y ya bloqueadas
+  const totalUnits = dinnerUnits(ev);
+  const locks = Array.isArray(ev.repriceLocks)? ev.repriceLocks : (ev.repriceLocks=[]);
+  const lockedUnits = locks.reduce((a,l)=> a+Math.max(0,num(l.units)), 0);
+  const remainingUnits = Math.max(0, totalUnits - lockedUnits);
+
+  // Unidades pagadas hasta ahora (asumimos: los pagos cubren cena primero)
+  const totalPaid = (ev.payments||[]).reduce((a,p)=> a+Math.max(0,num(p.amount)), 0);
+  const paidUnitsSoFar = Math.min(totalUnits, totalPaid / Math.max(1,oldP));
+
+  // Unidades adicionales que debemos congelar al precio viejo en ESTE repricing
+  const additionalUnitsToLock = Math.max(0, Math.min(remainingUnits, paidUnitsSoFar - lockedUnits));
+
+  if(additionalUnitsToLock > 0){
+    ev.repriceLocks.push({ units: additionalUnitsToLock, price: oldP, at: Date.now() });
+  }
+
+  // Actualizamos el precio actual (afecta solo a unidades pendientes)
+  ev.pricePer = newP;
+
+  // Recalcular base informativa y persistir
+  ev.baseTotal = baseOf(ev);
   await persistEvent(ev); newPricePer.value='';
-  refreshSummary(); renderEventList(); alert('Precio de cena actualizado (solo pendientes) ✅');
+  refreshSummary(); renderEventList();
+  alert('Precio de cena actualizado ✅ (se congelaron unidades ya pagadas)');
 });
 
 /* ===== Recibos (PDF) ===== */
@@ -1365,7 +1366,7 @@ async function generateReceipt(eventId, paymentId){
   const y1=y0+14;
   doc.rect(16, y1, 92, 12); doc.text('Salón', 18, y1+5); doc.setFont('helvetica','bold'); doc.text(doc.splitTextToSize(ev.salon||'—',88), 18, y1+9); doc.setFont('helvetica','normal');
   doc.rect(110,y1, 45, 12); doc.text('Opción/Plan', 112, y1+5); doc.setFont('helvetica','bold'); doc.text(doc.splitTextToSize(ev.optionLabel||'—',41), 112, y1+9); doc.setFont('helvetica','normal');
-  doc.rect(157,y1, 43, 12); doc.text('Precio cena actual', 159, y1+5); doc.setFont('helvetica','bold'); doc.text(money(t.pricePer), 159, y1+9); doc.setFont('helvetica','normal');
+  doc.rect(157,y1, 43, 12); doc.text('Precio cena actual', 159, y1+5); doc.setFont('helvetica','bold'); doc.text(money(ev.pricePer||0), 159, y1+9); doc.setFont('helvetica','normal');
 
   const y1b=y1+14;
   doc.rect(16, y1b, 92, 12); doc.text('Después de cena (A/N)', 18, y1b+5);
@@ -1373,8 +1374,13 @@ async function generateReceipt(eventId, paymentId){
   doc.rect(110, y1b, 90, 12); doc.text('Personas (Cena / Después)', 112, y1b+5);
   doc.setFont('helvetica','bold'); doc.text(`A:${t.ad} N:${t.kd} / A:${t.aa} N:${t.ka}`, 112, y1b+9); doc.setFont('helvetica','normal');
 
+  const y1c=y1b+14;
+  // NUEVO: Extras visible debajo de "Precio después A/N"
+  doc.rect(16, y1c, 92, 12); doc.text('Extras', 18, y1c+5);
+  doc.setFont('helvetica','bold'); doc.text(money(t.extrasTotal), 18, y1c+9); doc.setFont('helvetica','normal');
+
   const pagoFecha = new Date(p.at).toLocaleDateString('es-AR');
-  const y2 = y1b+14;
+  const y2 = y1c+14;
   doc.rect(16, y2, 64, 12); doc.text('Fecha de pago', 18, y2+5); doc.setFont('helvetica','bold'); doc.text(pagoFecha, 18, y2+9); doc.setFont('helvetica','normal');
   doc.rect(82, y2, 118, 12); doc.text('Remito Nº', 84, y2+5); doc.setFont('helvetica','bold'); doc.text(remito, 140, y2+9, {align:'center'}); doc.setFont('helvetica','normal');
 
@@ -1408,9 +1414,10 @@ async function generateReceipt(eventId, paymentId){
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.text(`Cena — Adultos: ${t.ad} • Niños: ${t.kd}`, 18, TY+10);
   doc.text(`Después — Adultos: ${t.aa} • Niños: ${t.ka}`, 110, TY+10);
-  doc.text(`Precio cena actual: ${money(t.pricePer)}`, 18, TY+18);
+  // ⚠️ Quitado "Precio cena" de abajo (ya está en el encabezado)
+  doc.text(`Total base: ${money(t.base)}`, 18, TY+18);
   doc.text(`Precios después A/N: ${money(t.priceAfter)} / ${money(t.priceAfterKids)}`, 110, TY+18);
-  doc.text(`Total base: ${money(t.base)}`, 18, TY+26);
+  doc.text(`Extras: ${money(t.extrasTotal)}`, 18, TY+26);
   doc.setFont('helvetica','bold'); doc.text(`TOTAL: ${money(t.total)}`, 18, TY+34);
   doc.setFont('helvetica','normal'); doc.text(`Abonado: ${money(t.paid)}`, 110, TY+34);
   doc.setFont('helvetica','bold'); doc.text(`SALDO: ${money(t.remain)}`, 18, TY+40);
@@ -1478,9 +1485,10 @@ async function generateGeneralReceipt(eventId){
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.text(`Cena — Adultos: ${t.ad} • Niños: ${t.kd}`, 18, TY+10);
   doc.text(`Después — Adultos: ${t.aa} • Niños: ${t.ka}`, 110, TY+10);
-  doc.text(`Precio cena: ${money(t.pricePer)}`, 18, TY+18);
+  // ⚠️ Quitado "Precio cena" de abajo (ya está arriba en encabezado)
+  doc.text(`Total base: ${money(t.base)}`, 18, TY+18);
   doc.text(`Precios después A/N: ${money(t.priceAfter)} / ${money(t.priceAfterKids)}`, 110, TY+18);
-  doc.text(`Total base: ${money(t.base)}`, 18, TY+26);
+  doc.text(`Extras: ${money(t.extrasTotal)}`, 18, TY+26);
   doc.setFont('helvetica','bold'); doc.text(`TOTAL: ${money(t.total)}`, 18, TY+34);
   doc.setFont('helvetica','normal'); doc.text(`Abonado: ${money(t.paid)}`, 110, TY+34);
   doc.setFont('helvetica','bold'); doc.text(`SALDO: ${money(t.remain)}`, 18, TY+40);
@@ -1499,3 +1507,4 @@ async function deleteEventDeep(eventId){
 </script>
 </body>
 </html>
+```
