@@ -1,17 +1,4 @@
-Aquí tienes el **archivo completo** con todos los cambios pedidos listo para **copiar y pegar**:
 
-* Eliminado todo lo de **Ajustes** (UI, lógica y en los PDF).
-* El **reprecio** ahora:
-
-  * **Congela** al **precio viejo** las “unidades de cena” que ya estaban **pagadas** en el momento del cambio (adulto = 1, niño = 0.5), usando `repriceLocks`.
-  * Solo las **unidades pendientes** pasan al **nuevo precio**.
-  * No usa “ajustes” ni suma líneas extra: queda embebido en el cálculo base.
-* En el **panel de Resumen** agregué la línea **“Extras”** debajo de **“Precio después A/N”**.
-* En **ambos PDFs** agregué **“Extras”** debajo de **“Precios después A/N”** y quité la duplicación de **“Precio cena”** (solo queda arriba).
-
----
-
-```html
 <!doctype html>
 <html lang="es">
 <head>
@@ -1507,4 +1494,3 @@ async function deleteEventDeep(eventId){
 </script>
 </body>
 </html>
-```
