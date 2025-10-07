@@ -1114,8 +1114,19 @@ async function loadGallery(id){
 function dinnerUnits(ev){
   const ad = Math.max(0, num(ev.adultsDinner||0));
   const kd = Math.max(0, num(ev.kidsDinner||0));
-  return ad + 0.5*kd; // adulto=1, niño=0.5
+
+  const priceA = Math.max(0, num(ev.pricePer||0));
+  const priceK = Math.max(0, num(ev.pricePerKids||0));
+
+  // Si no hay precio adulto, evitamos dividir por 0 y caemos al 0.5 clásico
+  const kidsFactor = priceA > 0
+    ? (priceK > 0 ? (priceK / priceA) : 0.5)
+    : 0.5;
+
+  // adulto = 1 unidad; niño = factor relativo
+  return ad + kidsFactor * kd;
 }
+
 function round2(x){ return Math.round((x||0)*100)/100; }
 
 function baseDinner(ev){
@@ -1495,188 +1506,317 @@ function savePdf(doc, filename){
   }
 }
 
-/* ===== Recibos (PDF) ===== */
-async function generateGeneralReceipt(eventId){
-  const { jsPDF } = window.jspdf;
-  const ev = events.find(e => e.id === eventId);
-  if (!ev) return alert('Evento no encontrado');
+// ========= Helper: asegurar jsPDF =========
+function ensureJsPDF(){
+  if (!(window.jspdf && window.jspdf.jsPDF)) {
+    alert('No se pudo cargar jsPDF. Verificá la etiqueta de <script> de jsPDF o la conexión.');
+    return null;
+  }
+  return window.jspdf.jsPDF;
+}
 
-  const t = computeTotals(ev);
+// ========= Recibo individual (PDF) =========
+async function generateReceipt(eventId, paymentId){
+  const jsPDF = ensureJsPDF(); if(!jsPDF) return;
+  const ev  = events.find(e => e.id === eventId);
+  if(!ev){ alert('Evento no encontrado'); return; }
+  const pay = (ev.payments||[]).find(p => p.id === paymentId);
+  if(!pay){ alert('Pago no encontrado'); return; }
+
+  const seq = await nextSeqAny();
   const doc = new jsPDF({ unit:'mm', format:'a4' });
 
-  // === Constantes de layout
-  const W=210, H=297;
-const M=10;
-const X0=M, Y0=M, BOXW=W-2*M;
-const bw = 0.25;
+  const W=210, H=297, M=10, BOXW=W-2*M, PAD=6, X0=M, Y0=M, innerX=X0+PAD, innerW=BOXW-2*PAD;
+  const moneyFmt = n => '$ ' + Number(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const destinoMap = { general:'General / Mixto', extras:'Extras', opciones:'Opciones (cena)', despues:'Después de cena' };
+  const personaMap = { adulto:'Adulto', nino:'Niño' };
 
-// NUEVO: ancho interno (espacio útil dentro del marco)
-const INNER_X = X0 + 6;
-const INNER_W = BOXW - 12;
+  // Marco
+  doc.setLineWidth(0.25);
+  doc.rect(X0, Y0, BOXW, H-2*M);
 
-// Marco general
-doc.setLineWidth(bw);
-doc.rect(X0, Y0, BOXW, H-2*M);
-
-
-  // Logo: arriba a la derecha, lo bastante alto para no chocar
+  // Logo
   try{
     const i=new Image(); i.crossOrigin='anonymous';
     i.src=document.getElementById('logoPreview').src;
     await new Promise(r=> i.onload=r);
     const c=document.createElement('canvas');
     c.width=i.width; c.height=i.height; c.getContext('2d').drawImage(i,0,0);
-    // un poco más pequeño y más arriba
     doc.addImage(c.toDataURL('image/png'),'PNG', X0+BOXW-32, Y0+6, 24, 24);
   }catch{}
 
-  // Título
+  // Encabezado
   doc.setFont('helvetica','bold'); doc.setFontSize(22);
-  doc.text('RECIBO GENERAL', X0+6, Y0+16);
+  doc.text('RECIBO', X0+PAD, Y0+16);
   doc.setFont('helvetica','normal'); doc.setFontSize(11);
-  doc.text('OK EVENTOS — CATERING Y EGRESADOS', X0+6, Y0+22);
+  doc.text('OK EVENTOS — CATERING Y EGRESADOS', X0+PAD, Y0+22);
 
-// ===== Encabezado con cajas
-const rowH = 14;
-const topY = Y0 + 28;
+  // Número y fecha
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text(`N° ${seq}`, X0+PAD, Y0+30);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.text(new Date(pay.at).toLocaleString('es-AR'), X0+PAD+40, Y0+30);
 
-// NUEVO: anchos que SIEMPRE entran en INNER_W
-const wL = 100;         // bloque izquierdo (Nombre/Salón)
-const wM = 34;          // bloque medio  (Fecha/Opción)
-const wR = INNER_W - wL - wM; // bloque derecho (Provincia/Precio)
+  // Evento
+  const rowH=12, topY=Y0+36, wL=100, wR=innerW-wL;
+  doc.rect(innerX, topY, wL, rowH);
+  doc.rect(innerX+wL, topY, wR, rowH);
+  doc.setFontSize(10);
+  doc.text('Evento', innerX+2, topY+7);
+  doc.setFont('helvetica','bold');
+  doc.text(doc.splitTextToSize(ev.name||'—', wL-4), innerX+2, topY+11);
+  doc.setFont('helvetica','normal');
+  doc.text('Fecha / Provincia', innerX+wL+2, topY+7);
+  doc.setFont('helvetica','bold');
+  doc.text(`${ev.date||'—'} — ${ev.province||'—'}`, innerX+wL+2, topY+11);
 
-// fila 1
-doc.rect(INNER_X,            topY, wL, rowH); // Nombre
-doc.rect(INNER_X + wL,       topY, wM, rowH); // Fecha
-doc.rect(INNER_X + wL + wM,  topY, wR, rowH); // Provincia
-// fila 2
-doc.rect(INNER_X,            topY+rowH, wL, rowH); // Salón
-doc.rect(INNER_X + wL,       topY+rowH, wM, rowH); // Opción/Plan
-doc.rect(INNER_X + wL + wM,  topY+rowH, wR, rowH); // Precio cena
+  // Detalle
+  const y2 = topY + rowH + 6;
+  const detalle = (pay.target==='opciones'||pay.target==='despues')
+    ? `${destinoMap[pay.target]||'General'} — ${personaMap[pay.person||'adulto']}`
+    : (destinoMap[pay.target]||'General / Mixto');
 
-const L=(txt,x,y)=>doc.text(txt,x,y);
-const B=(txt,x,y)=>{doc.setFont('helvetica','bold');doc.text(txt,x,y);doc.setFont('helvetica','normal');};
-const moneySafe = n => '$ ' + Number(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  doc.rect(innerX, y2, innerW, 34);
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text(`RECIBÍ de: ${ev.name||'—'}`, innerX+2, y2+8);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.text(`Concepto: ${detalle}`, innerX+2, y2+16);
+  doc.text(`Método: ${pay.method||'-'}`, innerX+2, y2+24);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text(`Importe: ${moneyFmt(pay.amount)}`, innerX+2, y2+32);
 
-doc.setFont('helvetica','normal'); doc.setFontSize(10);
-L('Nombre del evento', INNER_X+2, topY+6);            B(doc.splitTextToSize(ev.name||'—', wL-4), INNER_X+2, topY+11);
-L('Fecha evento',      INNER_X+wL+2, topY+6);         B(ev.date||'—', INNER_X+wL+2, topY+11);
-L('Provincia',         INNER_X+wL+wM+2, topY+6);      B(doc.splitTextToSize(ev.province||'—', wR-4), INNER_X+wL+wM+2, topY+11);
-
-L('Salón',             INNER_X+2, topY+rowH+6);       B(doc.splitTextToSize(ev.salon||'—', wL-4), INNER_X+2, topY+rowH+11);
-L('Opción/Plan',       INNER_X+wL+2, topY+rowH+6);    B(doc.splitTextToSize(ev.optionLabel||'—', wM-4), INNER_X+wL+2, topY+rowH+11);
-L('Precio cena',       INNER_X+wL+wM+2, topY+rowH+6); B(moneySafe(ev.pricePer||0), INNER_X+wL+wM+2, topY+rowH+11);
-
-  // ===== Pagos registrados
-let y = topY + rowH*2 + 8;
-doc.setFont('helvetica','bold'); doc.setFontSize(11);
-doc.text('Pagos registrados', INNER_X, y);
-y += 3;
-
-// NUEVO: columnas que suman exactamente INNER_W
-const cols = [
-  { x:INNER_X,               w:26, t:'Fecha' },
-  { x:INNER_X+26,            w:96, t:'Cliente/Destino' },
-  { x:INNER_X+26+96,         w:28, t:'Método' },
-  { x:INNER_X+26+96+28,      w:28, t:'Monto' }
-];
-const lineH=12;
-
-doc.setLineWidth(0.2);
-doc.setFont('helvetica','bold'); doc.setFontSize(10);
-cols.forEach(c=>{ doc.rect(c.x, y, c.w, lineH); doc.text(c.t, c.x+2, y+7); });
-y += lineH;
-
-// ... (el resto de tu forEach de pagos queda igual, usa estas "cols")
-  // cabecera
-  cols.forEach(c=>{ doc.rect(c.x, y, c.w, lineH); doc.text(c.t, c.x+2, y+7); });
-  y += lineH;
-
-  const destinoMap = { general:'General / Mixto', extras:'Extras', opciones:'Opciones (cena)', despues:'Después de cena' };
-  const personaMap = { adulto:'Adulto', nino:'Niño' };
-  const payments = ev.payments || [];
-
+  // Comprobante
+  let y3 = y2 + 34 + 8;
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  if(!payments.length){
-    doc.rect(cols[0].x, y, cols.reduce((a,c)=>a+c.w,0), lineH);
-    doc.text('— Sin pagos —', cols[0].x+2, y+7);
-    y += lineH;
-  }else{
-    payments.forEach((p, idx)=>{
-      const fecha=new Date(p.at).toLocaleDateString('es-AR');
-      const destino=(destinoMap[p.target||'general']||'General / Mixto') +
-        ((p.target==='opciones'||p.target==='despues') ? ` — ${personaMap[p.person||'adulto']}` : '');
-      const monto = moneySafe(p.amount);
+  doc.text('Comprobante:', innerX, y3); y3 += 2;
 
-      cols.forEach(c=> doc.rect(c.x, y, c.w, lineH));
-      doc.text(fecha,         cols[0].x+2, y+7);
-
-      // Texto de Cliente/Destino (clic abre comprobante)
-      const destText = doc.splitTextToSize(destino, cols[1].w-4);
-      doc.text(destText,      cols[1].x+2, y+7);
-
-      // Link sobre TODA la celda de Cliente/Destino
-      const cellR = {x:cols[1].x, y, w:cols[1].w, h:lineH};
-      if(/^https?:\/\//i.test(p.proofUrl)){
-        doc.link(cellR.x, cellR.y, cellR.w, cellR.h, { url:p.proofUrl });
-      }else if(/^data:image\//i.test(p.proofUrl)){
-        // Nueva página con la imagen y link por página
-        doc.addPage(); const target=doc.getNumberOfPages();
-        doc.setFont('helvetica','bold'); doc.setFontSize(14);
-        doc.text(`Comprobante ${idx+1}`, X0+6, Y0+14);
-        try{ doc.addImage(p.proofUrl,'JPEG', X0+6, Y0+20, W-2*(X0+6), 240, undefined, 'FAST'); }catch{}
-        doc.setPage(1);
-        doc.link(cellR.x, cellR.y, cellR.w, cellR.h, { pageNumber:target });
-        doc.setFont('helvetica','normal'); doc.setFontSize(10);
-      }else if(/^data:application\/pdf/i.test(p.proofUrl)){
-        // Página puente con link al data:pdf (visores lo abren)
-        doc.addPage(); const target=doc.getNumberOfPages();
-        doc.setFont('helvetica','bold'); doc.setFontSize(14);
-        doc.text(`Comprobante ${idx+1} (PDF)`, X0+6, Y0+14);
-        doc.setFont('helvetica','normal'); doc.setFontSize(11);
-        doc.textWithLink('Abrir PDF del comprobante', X0+6, Y0+22, { url: p.proofUrl });
-        doc.setPage(1);
-        doc.link(cellR.x, cellR.y, cellR.w, cellR.h, { pageNumber:target });
-      }
-
-      doc.text(p.method||'-', cols[2].x+2, y+7);
-      doc.text(monto,         cols[3].x+2, y+7);
-      y += lineH;
-    });
+  if (/^https?:\/\//i.test(pay.proofUrl)) {
+    doc.textWithLink('Abrir comprobante', innerX, y3+6, { url: pay.proofUrl });
+  } else if (/^data:image\//i.test(pay.proofUrl)) {
+    const main = doc.getNumberOfPages();
+    doc.addPage();
+    doc.setFont('helvetica','bold'); doc.setFontSize(14);
+    doc.text('Comprobante (imagen)', X0+PAD, Y0+16);
+    try{ doc.addImage(pay.proofUrl, 'JPEG', X0+PAD, Y0+22, BOXW-2*PAD, 220, undefined, 'FAST'); }catch{}
+    doc.setPage(main);
+    doc.textWithLink('Ver imagen incrustada (pág. sig.)', innerX, y3+6, { pageNumber: main+1 });
+  } else if (/^data:application\/pdf/i.test(pay.proofUrl)) {
+    doc.text('Adjunto PDF (no embebido).', innerX, y3+6);
+  } else {
+    doc.text('—', innerX, y3+6);
   }
 
-  // ===== Totales del evento (SIN líneas internas)
-  y += 8;
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('Totales del evento', X0+6, y);
-  y += 2;
-
-  const blockW = BOXW - 12;
-  const TL = X0+6;
-  const blockH = 44; // un poco más alto para incluir TOTAL adentro
-  doc.setLineWidth(0.2);
-  doc.rect(TL, y, blockW, blockH); // SOLO marco exterior
-
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  const line1Y = y + 8;
-  const line2Y = y + 8 + 10;
-  const line3Y = y + 8 + 20;
-
-  doc.text(`Cena — Adultos: ${t.ad} • Niños: ${t.kd}`, TL+2, line1Y);
-  doc.text(`Después — Adultos: ${t.aa} • Niños: ${t.ka}`, TL + blockW/2, line1Y);
-
-  doc.text(`Extras: ${moneySafe(t.extrasTotal)}`, TL+2, line2Y);
-  doc.text(`Precios después A/N: ${moneySafe(t.priceAfter)} / ${moneySafe(t.priceAfterKids)}`, TL + blockW/2, line2Y);
-
-  // TOTAL A PAGAR dentro del recuadro (sin líneas)
-  doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text(`TOTAL A PAGAR: ${moneySafe(t.remain)}`, TL+2, line3Y);
+  // Pie
+  const Hline = H - M - 30;
+  doc.line(innerX, Hline, innerX+60, Hline);
+  doc.setFontSize(10);
+  doc.text('Firma y aclaración', innerX, Hline+6);
 
   const safe=(ev.name||'evento').replace(/[^\p{L}\p{N}_-]+/gu,'_');
-savePdf(doc, `Recibo_General_${safe}.pdf`);
+  savePdf(doc, `Recibo_${safe}_${seq}.pdf`);
 }
 
-/* ===== Eliminar evento ===== */
+// ========= Recibo GENERAL — layout igual al ejemplo (una sola fila de encabezado) =========
+async function generateGeneralReceipt(eventId){
+  const jsPDF = ensureJsPDF(); if(!jsPDF) return;
+  const ev = events.find(e => e.id === eventId);
+  if(!ev){ alert('Evento no encontrado'); return; }
+
+  const t = computeTotals(ev);
+  const pays = (ev.payments||[]).slice().sort((a,b)=>a.at-b.at);
+
+  const seq = await nextSeqAny();
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+
+  // Constantes de layout
+  const W=210, H=297, M=10, BOXW=W-2*M, PAD=6, X0=M, Y0=M, innerX=X0+PAD, innerW=BOXW-2*PAD;
+  const moneyFmt = n => '$ ' + Number(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const destinoMap = { general:'General / Mixto', extras:'Extras', opciones:'Opciones (cena)', despues:'Después de cena' };
+  const personaMap = { adulto:'Adulto', nino:'Adulto' /* mostrás 'Adulto' en tu ejemplo */ };
+
+  // Marco general
+  doc.setLineWidth(0.25);
+  doc.rect(X0, Y0, BOXW, H-2*M);
+
+  // Logo
+  try{
+    const i=new Image(); i.crossOrigin='anonymous';
+    i.src=document.getElementById('logoPreview').src;
+    await new Promise(r=> i.onload=r);
+    const c=document.createElement('canvas');
+    c.width=i.width; c.height=i.height; c.getContext('2d').drawImage(i,0,0);
+    doc.addImage(c.toDataURL('image/png'),'PNG', X0+BOXW-32, Y0+6, 24, 24);
+  }catch{}
+
+  // Encabezado
+  doc.setFont('helvetica','bold'); doc.setFontSize(22);
+  doc.text('RECIBO GENERAL', X0+PAD, Y0+16);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.text('OK EVENTOS — CATERING Y EGRESADOS', X0+PAD, Y0+22);
+
+  // Número y fecha (esquina superior izquierda, como tu ejemplo)
+  doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text(`N° ${seq}`, X0+PAD, Y0+30);
+  doc.setFont('helvetica','normal');
+  doc.text(new Date().toLocaleString('es-AR'), X0+PAD+32, Y0+30);
+
+  // ===== Bloque de datos del evento (misma grilla del ejemplo)
+  let y = Y0+36;
+  const rowH=12, col1=innerX, col2=innerX+innerW/3, col3=innerX+innerW*2/3;
+
+  // Caja completa y separadores
+  const blockH = rowH*2;
+  doc.rect(innerX, y, innerW, blockH);
+  doc.line(col2, y, col2, y+blockH);
+  doc.line(col3, y, col3, y+blockH);
+  doc.line(innerX, y+rowH, innerX+innerW, y+rowH);
+
+  // Fila 1
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text('Nombre del evento', col1+2, y+5);
+  doc.text('Fecha evento',      col2+2, y+5);
+  doc.text('Provincia',         col3+2, y+5);
+  doc.setFont('helvetica','bold');
+  doc.text(ev.name||'—',        col1+2, y+10);
+  doc.text(ev.date||'—',        col2+2, y+10);
+  doc.text(ev.province||'—',    col3+2, y+10);
+
+  // Fila 2
+  doc.setFont('helvetica','normal');
+  doc.text('Salón',             col1+2, y+rowH+5);
+  doc.text('Opción/Plan',       col2+2, y+rowH+5);
+  doc.text('Precio cena',       col3+2, y+rowH+5);
+  doc.setFont('helvetica','bold');
+  doc.text(ev.salon||'—',       col1+2, y+rowH+10);
+  doc.text(ev.optionLabel||'—', col2+2, y+rowH+10);
+  doc.text(moneyFmt(t.pricePer),col3+2, y+rowH+10);
+
+  y += blockH + 10;
+
+// ===== Pagos registrados (UNA sola fila de encabezado)
+doc.setFont('helvetica','bold'); doc.setFontSize(12);
+doc.text('Pagos registrados', innerX, y);
+y += 6;
+
+/*  NUEVO: columnas con anchos claros (suman 178 mm de innerW)
+   Fecha: 35  | Cliente/Destino: 78 | Método: 30 | Monto: 35
+*/
+const colW1 = 35, colW2 = 78, colW3 = 30, colW4 = 35;
+const tcol1 = innerX;
+const tcol2 = tcol1 + colW1;
+const tcol3 = tcol2 + colW2;
+const tcol4 = tcol3 + colW3;
+const tableW = innerW, headerH = 10, rowGap = 8;
+
+// Encabezado
+doc.setLineWidth(0.25);
+doc.rect(innerX, y, tableW, headerH);
+doc.line(tcol2, y, tcol2, y+headerH);
+doc.line(tcol3, y, tcol3, y+headerH);
+doc.line(tcol4, y, tcol4, y+headerH);
+doc.setFont('helvetica','bold'); doc.setFontSize(10);
+doc.text('Fecha',           tcol1+2, y+6);
+doc.text('Cliente/Destino', tcol2+2, y+6);
+doc.text('Método',          tcol3+2, y+6);
+doc.text('Monto',           tcol4+2, y+6);
+
+// Filas
+let curY = y + headerH;
+doc.setFont('helvetica','normal');
+let sumPaid = 0;
+const maxY = H - M - 60;
+
+  for (const p of pays){
+    sumPaid += Number(p.amount)||0;
+
+    // Salto de página si no entra
+    if (curY + rowGap > maxY){
+      doc.addPage();
+      curY = Y0+12;
+      // Redibujar encabezado en nueva página
+      doc.setFont('helvetica','bold'); doc.setFontSize(10);
+      doc.rect(innerX, curY, tableW, headerH);
+      doc.line(tcol2, curY, tcol2, curY+headerH);
+      doc.line(tcol3, curY, tcol3, curY+headerH);
+      doc.line(tcol4, curY, tcol4, curY+headerH);
+      doc.text('Fecha', tcol1+2, curY+6);
+      doc.text('Cliente/Destino', tcol2+2, curY+6);
+      doc.text('Método', tcol3+2, curY+6);
+      doc.text('Monto',  tcol4+2, curY+6);
+      curY += headerH;
+      doc.setFont('helvetica','normal');
+    }
+
+    // Fila contorno
+    doc.rect(innerX, curY, tableW, rowGap);
+    doc.line(tcol2, curY, tcol2, curY+rowGap);
+    doc.line(tcol3, curY, tcol3, curY+rowGap);
+    doc.line(tcol4, curY, tcol4, curY+rowGap);
+
+    const fecha = new Date(p.at).toLocaleDateString('es-AR');
+    const destino = (destinoMap[p.target||'general']||'General / Mixto') +
+                    (p.person ? ` — ${personaMap[p.person]||''}` : '');
+    const metodo = p.method||'-';
+    const monto  = moneyFmt(p.amount);
+
+    // Fecha
+    doc.text(fecha, tcol1+2, curY+6);
+
+    // Destino (clickeable al comprobante)
+    if (p.proofUrl && /^https?:\/\//i.test(p.proofUrl)){
+      doc.textWithLink(destino, tcol2+2, curY+6, { url: p.proofUrl });
+    } else if (p.proofUrl && /^data:image\//i.test(p.proofUrl)){
+      const here = doc.getNumberOfPages();
+      doc.addPage();
+      const targetPage = here+1;
+      doc.setFont('helvetica','bold'); doc.setFontSize(14);
+      doc.text('Comprobante (imagen)', X0+PAD, Y0+16);
+      try{ doc.addImage(p.proofUrl,'JPEG', X0+PAD, Y0+22, BOXW-2*PAD, 220, undefined, 'FAST'); }catch{}
+      doc.setPage(here);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10);
+      doc.textWithLink(destino, tcol2+2, curY+6, { pageNumber: targetPage });
+    } else {
+      doc.text(destino, tcol2+2, curY+6);
+    }
+
+  // Método y Monto
+doc.text(metodo, tcol3+2, curY+6);
+// NUEVO: monto alineado a la derecha dentro de la 4ta columna
+doc.text(monto, tcol4 + colW4 - 2, curY+6, { align: 'right' });
+
+
+    curY += rowGap;
+  }
+
+  // ===== Totales del evento (misma caja)
+  curY += 8;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('Totales del evento', innerX, curY);
+  curY += 4;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.rect(innerX, curY, innerW, 24);
+  doc.text(`Cena — Adultos: ${t.ad} • Niños: ${t.kd}`, innerX+2, curY+7);
+  doc.text(`Después — Adultos: ${t.aa} • Niños: ${t.ka}`, innerX+innerW/2, curY+7);
+  doc.text(`Extras: ${moneyFmt(t.extrasTotal)}`, innerX+2, curY+14);
+  doc.text(`Precios después A/N: ${moneyFmt(t.priceAfter)} / ${moneyFmt(t.priceAfterKids)}`, innerX+innerW/2, curY+14);
+
+  const remain = Math.max(0, t.total - sumPaid);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text(`TOTAL A PAGAR: ${moneyFmt(remain)}`, innerX, curY+32);
+
+  // Firma
+  const Hline = H - M - 30;
+  doc.line(innerX, Hline, innerX+60, Hline);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text('Firma y aclaración', innerX, Hline+6);
+
+  const safe=(ev.name||'evento').replace(/[^\p{L}\p{N}_-]+/gu,'_');
+  savePdf(doc, `Recibo_GENERAL_${safe}_${seq}.pdf`);
+}
+
+
+// ===== Eliminar evento =====
 async function deleteEventDeep(eventId){
   if(!confirm('¿Eliminar el evento y TODOS sus datos?')) return;
   if(isAuthed()) await UCOL('events').doc(eventId).delete();
@@ -1684,6 +1824,7 @@ async function deleteEventDeep(eventId){
   if(currentEventId===eventId){ evPanelBk.style.display='none'; currentEventId=null; }
   renderEventList(); updateUndoButton(); alert('Evento eliminado ✅');
 }
+
 </script>
 </body>
 </html>
