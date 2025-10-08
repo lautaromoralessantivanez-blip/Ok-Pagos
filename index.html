@@ -1,4 +1,3 @@
- bien necesito que a la hora de descargar el recibo en png salga este recibo con sus respectivos registracion unicamente el recibo con sus respectos pagos pero no re molestes en sumar los comprobantes ahi en png que eso quede solamente en descargar en pdf dame el codigo completo para copiar y pegar en dos partes               <!doctype html> 
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -440,7 +439,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <div class="inline" style="gap:6px">
               <button id="btnGeneralReceipt" class="ghost" type="button">Recibo GENERAL (PDF)</button>
               <!-- NUEVO: botón PNG del recibo general -->
-              <button id="btnGeneralReceiptPNG" class="ghost" type="button">Recibo GENERAL (PNG)</button>
             </div>
           </div>
         </div>
@@ -937,7 +935,6 @@ const payDate   = document.getElementById('payDate');
 
 const paySave = document.getElementById('paySave');
 const btnGeneralReceipt = document.getElementById('btnGeneralReceipt');
-const btnGeneralReceiptPNG = document.getElementById('btnGeneralReceiptPNG');
 const payTotal = document.getElementById('payTotal');
 const payList = document.getElementById('payList');
 
