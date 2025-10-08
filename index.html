@@ -1,4 +1,4 @@
-<!doctype html>
+ bien necesito que a la hora de descargar el recibo en png salga este recibo con sus respectivos registracion unicamente el recibo con sus respectos pagos pero no re molestes en sumar los comprobantes ahi en png que eso quede solamente en descargar en pdf dame el codigo completo para copiar y pegar en dos partes               <!doctype html> 
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -7,6 +7,8 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- NUEVO: html2canvas para exportar recibo como PNG (solo imagen) -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <!-- Firebase (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -59,16 +61,30 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 .close{background:#efefef;color:#222}
 .err{color:#b00020;font-weight:600}
 
-/* Subtabs provincia */
-.subtabs{display:flex;gap:8px;margin:8px 0 6px}
-.subtabs .chip{padding:6px 10px;border-radius:999px;border:1px solid #e8e8e8;background:#f7f7f5;cursor:pointer;font-weight:600}
-.subtabs .chip.active{background:#fff;border-color:#d9d9d9;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+/* Subtabs provincia y tipo */
+.subtabs, .typefilters{display:flex;gap:8px;margin:8px 0 6px;flex-wrap:wrap}
+.subtabs .chip, .typefilters .chip{padding:6px 10px;border-radius:999px;border:1px solid #e8e8e8;background:#f7f7f5;cursor:pointer;font-weight:600}
+.subtabs .chip.active, .typefilters .chip.active{background:#fff;border-color:#d9d9d9;box-shadow:0 1px 0 rgba(0,0,0,.04)}
 
 /* AUTH overlay */
 #authBk{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:80}
 #authCard{background:#fff;border-radius:16px;padding:18px;max-width:480px;width:92%}
 .auth-tabs{display:flex;gap:6px;margin-bottom:10px}
 .auth-tabs .chip.active{background:#fff}
+
+/* Estilos para el recibo DOM (PNG) */
+#receiptHiddenRoot{position:fixed;left:-99999px;top:-99999px;visibility:hidden}
+.rbox{width:860px;max-width:860px;background:#fff;border:1px solid #e8e8e8;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.08);padding:18px;font-family:Poppins,system-ui,Arial,sans-serif;color:#222}
+.rhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.rtitle{font-size:24px;font-weight:700}
+.rmeta{font-size:12px;color:#666}
+.rrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+.rcell{border:1px solid #eee;border-radius:10px;padding:10px}
+.rcell b{display:block;margin-bottom:4px}
+.rtable{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.rtable th,.rtable td{border:1px solid #eee;padding:6px;text-align:left}
+.rtot{margin-top:12px;font-size:18px;font-weight:700}
+.rfoot{margin-top:24px;border-top:1px dashed #ddd;padding-top:10px;font-size:12px;color:#666}
 </style>
 </head>
 <body>
@@ -264,7 +280,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
               <input type="text" id="exPrice" placeholder="Ej: 90000" inputmode="decimal" />
             </div>
           </div>
-          <!-- 🆕 Descripción (solo se muestra en catálogo y eventos, NO en recibos) -->
+          <!-- Descripción opcional -->
           <label>Descripción (opcional, para combos o extras)</label>
           <textarea id="exDesc" placeholder="Detalle del combo: incluye X, Y, Z..."></textarea>
 
@@ -313,12 +329,23 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
   <div id="tab-evList" class="tabpanel">
     <div class="card">
       <h3 style="margin:0 0 6px">Buscar evento</h3>
+      <!-- Barra de búsqueda ARRIBA (se mantiene) -->
       <input type="text" id="evSearch" placeholder="Escribí el nombre...">
 
+      <!-- NUEVO: Reordenado → Todos, Mendoza, San Juan (Todos activo) -->
       <div class="subtabs">
-        <div class="chip active" data-prov="San Juan">San Juan</div>
+        <div class="chip active" data-prov="Todos">Todos</div>
         <div class="chip" data-prov="Mendoza">Mendoza</div>
-        <div class="chip" data-prov="Todos">Todos</div>
+        <div class="chip" data-prov="San Juan">San Juan</div>
+      </div>
+
+      <!-- NUEVO: Filtros por tipo (al lado/abajo) -->
+      <div class="typefilters" id="typeFilters">
+        <div class="chip" data-type="15 años">Cumple 15</div>
+        <div class="chip" data-type="18 años">Cumple 18</div>
+        <div class="chip" data-type="Casamiento">Casamiento</div>
+        <div class="chip" data-type="Fiesta de Egresados">Egresados</div>
+        <div class="chip" data-type="Otro">Otro</div>
       </div>
 
       <div id="evList" class="list" style="margin-top:8px"></div>
@@ -359,7 +386,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <button id="addExtraToEvent" type="button">Agregar</button>
           </div>
 
-          <!-- 🔻 NUEVO: Extra personal dentro del panel del evento -->
+          <!-- Extra personal dentro del panel del evento -->
           <hr style="border:none;border-top:1px dashed #eee;margin:10px 0">
           <h4 style="margin:0 0 6px">Extra personal (solo para este evento)</h4>
           <div class="inline">
@@ -410,7 +437,11 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 
           <div class="inline" style="justify-content:space-between;margin-top:8px">
             <div class="small">Total abonado: <span class="total" id="payTotal">$ 0,00</span></div>
-            <button id="btnGeneralReceipt" class="ghost" type="button">Recibo GENERAL (PDF)</button>
+            <div class="inline" style="gap:6px">
+              <button id="btnGeneralReceipt" class="ghost" type="button">Recibo GENERAL (PDF)</button>
+              <!-- NUEVO: botón PNG del recibo general -->
+              <button id="btnGeneralReceiptPNG" class="ghost" type="button">Recibo GENERAL (PNG)</button>
+            </div>
           </div>
         </div>
 
@@ -506,7 +537,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
     <div class="small" id="authMsg"></div>
   </div>
 </div>
-
 <script>
 /* ============ Firebase SAFE INIT ============ */
 const FIREBASE_CONFIG = {
@@ -874,6 +904,7 @@ const exSearch = document.getElementById('exSearch');
 const evSearch = document.getElementById('evSearch');
 const evList = document.getElementById('evList');
 const provChips = Array.from(document.querySelectorAll('.subtabs .chip'));
+const typeChips = Array.from(document.querySelectorAll('.typefilters .chip'));
 
 /* ===== Refs UI (panel) ===== */
 const evPanelBk = document.getElementById('evPanelBk');
@@ -887,7 +918,6 @@ const exForEvent = document.getElementById('exForEvent');
 const exQty = document.getElementById('exQty');
 const exPriceOverride = document.getElementById('exPriceOverride');
 const addExtraToEvent = document.getElementById('addExtraToEvent');
-
 /* 🔻 NUEVOS refs para “extra personal” en el panel */
 const persNameEv = document.getElementById('persNameEv');
 const persPriceEv = document.getElementById('persPriceEv');
@@ -907,6 +937,7 @@ const payDate   = document.getElementById('payDate');
 
 const paySave = document.getElementById('paySave');
 const btnGeneralReceipt = document.getElementById('btnGeneralReceipt');
+const btnGeneralReceiptPNG = document.getElementById('btnGeneralReceiptPNG');
 const payTotal = document.getElementById('payTotal');
 const payList = document.getElementById('payList');
 
@@ -952,10 +983,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   ['input','change'].forEach(evt=>{
-    [evAdultsDinner,evKidsDinner,evAdultsAfter,evKidsAfter,evPricePer,evPriceAfter,evPriceAfterKids]
+    [evAdultsDinner,evKidsDinner,evAdultsAfter,evKidsAfter,evPricePer,evPriceAfter,evPriceAfterKids,evPricePerKids]
       .forEach(el=> el.addEventListener(evt, updateNewPreview));
   });
 
+  // Chips de provincia (reordenadas: Todos, Mendoza, San Juan)
   provChips.forEach(ch=>{
     ch.onclick=()=>{
       provChips.forEach(x=>x.classList.remove('active'));
@@ -964,13 +996,25 @@ document.addEventListener('DOMContentLoaded', ()=>{
     };
   });
 
+  // Chips de tipo (multi-selección)
+  typeChips.forEach(ch=>{
+    ch.onclick=()=>{
+      ch.classList.toggle('active');
+      renderEventList();
+    };
+  });
+
   // Deshacer
   pUndo.addEventListener('click', undoLast);
 
-  // Recibo GENERAL
+  // Recibo GENERAL (PDF y PNG)
   btnGeneralReceipt.addEventListener('click', ()=>{
     if(!currentEventId) return alert('Abrí un evento');
     generateGeneralReceipt(currentEventId);
+  });
+  btnGeneralReceiptPNG.addEventListener('click', async ()=>{
+    if(!currentEventId) return alert('Abrí un evento');
+    await generateGeneralReceiptPNG(currentEventId);
   });
 
   // Buscadores
@@ -1006,7 +1050,11 @@ function parseDateInput(v){
   if(m){ const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), y=m[3]; return `${y}-${mo}-${d}`; }
   return v;
 }
-function getActiveProvince(){ const a=document.querySelector('.subtabs .chip.active'); return a?.dataset.prov || 'San Juan'; }
+function getActiveProvince(){ const a=document.querySelector('.subtabs .chip.active'); return a?.dataset.prov || 'Todos'; }
+function getActiveTypes(){
+  const active = Array.from(document.querySelectorAll('.typefilters .chip.active')).map(x=>x.dataset.type);
+  return active; // si está vacío → no se filtra por tipo
+}
 
 /* ===== Crear evento ===== */
 evForm.addEventListener('submit', (e)=>{ e.preventDefault(); handleCreateEvent(); });
@@ -1291,13 +1339,17 @@ function computeTotals(ev){
   };
 }
 
-/* ===== Lista de eventos ===== */
+/* ===== Lista de eventos (con búsqueda + provincia + tipo) ===== */
 function renderEventList(){
-  const q=(evSearch.value||'').toLowerCase(); const prov=getActiveProvince();
+  const q=normalizar(evSearch.value||'');
+  const prov=getActiveProvince();
+  const activeTypes=getActiveTypes(); // [] = no filtra
+
   evList.innerHTML='';
   events
-    .filter(e=> (e.name||'').toLowerCase().includes(q))
+    .filter(e=> !q || normalizar(e.name||'').includes(q))
     .filter(e=> prov==='Todos'?true:((e.province||'San Juan')===prov))
+    .filter(e=> activeTypes.length? activeTypes.includes(e.type||'') : true)
     .forEach(e=>{
       const t=computeTotals(e);
       const meta=`${e.type||'-'} • ${e.date||'sin fecha'} • ${e.province||'San Juan'}`;
@@ -1414,7 +1466,7 @@ addExtraToEvent.addEventListener('click', async ()=>{
   renderEventItems(); refreshSummary(); renderEventList();
 });
 
-/* 🔻 NUEVO: agregar “extra personal” desde el panel del evento */
+/* Extra personal desde panel del evento */
 addPersonalEv.addEventListener('click', async ()=>{
   if(!currentEventId) return alert('Abrí un evento');
   const n=(persNameEv.value||'').trim();
@@ -1603,7 +1655,6 @@ document.getElementById('btnReprice').addEventListener('click', async ()=>{
 });
 
 /* ===== PDF helpers & generación de recibos ===== */
-/* (idéntico a tu versión, no modificado salvo por llamadas internas) */
 function savePdf(doc, filename){
   try { doc.save(filename); }
   catch (e) {
@@ -1621,6 +1672,7 @@ function ensureJsPDF(){
   }
   return window.jspdf.jsPDF;
 }
+
 /* ===== Recibo individual (PDF) ===== */
 async function generateReceipt(eventId, paymentId){
   const jsPDF = ensureJsPDF(); if(!jsPDF) return;
@@ -1807,6 +1859,7 @@ async function generateGeneralReceipt(eventId){
       doc.setFont('helvetica','normal');
     }
 
+    const destinoMap = { general:'General / Mixto', extras:'Extras', opciones:'Opciones (cena)', despues:'Después de cena' };
     const destino = (destinoMap[p.target||'general']||'General / Mixto') +
                     (p.person ? ` — ${(p.person==='nino'?'Niño':'Adulto')}` : '');
     doc.rect(innerX, curY, tableW, rowGap);
