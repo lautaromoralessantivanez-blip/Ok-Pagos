@@ -1539,16 +1539,58 @@ function renderEventItems(){
   evExtrasTotal.textContent=money(total);
 }
 
-/* ===== Reprecio (cena) ===== */
+/* ===== REPRECIO (cena) — FIX: solo afecta unidades NO pagadas y niños = 50% si no hay precio específico ===== */
 document.getElementById('btnReprice').addEventListener('click', async ()=>{
   if(!currentEventId) return;
   const ev=events.find(e=>e.id===currentEventId);
   const newP = Math.max(0,num(newPricePer.value));
   if(newP<=0) return alert('Precio nuevo inválido');
-  const unitsNow = round2(dinnerUnits(ev));
-  ev.repriceLocks = ev.repriceLocks || [];
-  ev.repriceLocks.push({ units: unitsNow, price: Math.max(0,num(ev.pricePer||0)), at: Date.now() });
+
+  // Array de locks válido
+  ev.repriceLocks = Array.isArray(ev.repriceLocks) ? ev.repriceLocks : [];
+
+  // Precio anterior (adulto)
+  const oldP = Math.max(0, num(ev.pricePer||0));
+  if(oldP<=0){ alert('Precio actual inválido'); return; }
+
+  // 1) Calcular cuánto se abonó a "opciones (cena)" (adultos o niños) en total
+  let totalPaidDinner = 0;
+  (ev.payments||[]).forEach(p=>{
+    if((p.target||'')==='opciones'){
+      totalPaidDinner += Math.max(0, num(p.amount));
+    }
+  });
+
+  // 2) Monto ya "congelado" en locks anteriores (suma de unidades * precio histórico)
+  let lockedAmount = 0;
+  ev.repriceLocks.forEach(l=>{
+    const u = (typeof l.units === 'number') ? l.units : num(l.units);
+    const pr= (typeof l.price === 'number') ? l.price : num(l.price);
+    lockedAmount += u * pr;
+  });
+
+  // Si por el bug anterior los locks superan lo realmente pagado, los reiniciamos
+  if(lockedAmount > totalPaidDinner + 0.01){
+    ev.repriceLocks = [];
+    lockedAmount = 0;
+  }
+
+  // 3) Monto adicional a congelar ahora (lo pagado menos lo ya congelado)
+  const amountToLock = Math.max(0, totalPaidDinner - lockedAmount);
+
+  // Convertimos ese monto a "unidades adulto-equivalentes" al precio ANTERIOR
+  // (adulto = 1 unidad, niño = 0.5 si no hay precio de niño; equivalencia: amount / oldP)
+  const addUnits = oldP > 0 ? round2(amountToLock / oldP) : 0;
+
+  if(addUnits > 0){
+    ev.repriceLocks.push({ units: addUnits, price: oldP, at: Date.now() });
+  }
+
+  // 4) Aplicar el nuevo precio adulto
   ev.pricePer = newP;
+  // Nota: Si el precio de NIÑOS está vacío, ya se toma 50% del actual en los cálculos (dinnerUnits())
+
+  // 5) Recalcular totales y persistir
   ev.baseTotal = baseOf(ev);
   await persistEvent(ev);
   newPricePer.value='';
