@@ -6,9 +6,20 @@
 <title>OK Eventos — Cloud</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- jsPDF (para generar PDFs) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- NUEVO: html2canvas para exportar recibo como PNG (solo imagen) -->
+
+<!-- html2canvas (por si lo necesitás en otra parte) -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<!-- PDF.js (para rasterizar 1ª hoja de PDFs de comprobantes) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.js";
+  }
+</script>
 
 <!-- Firebase (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -72,7 +83,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 .auth-tabs{display:flex;gap:6px;margin-bottom:10px}
 .auth-tabs .chip.active{background:#fff}
 
-/* Estilos para el recibo DOM (PNG) */
+/* Estilos recibo DOM (si lo usás en PNG) */
 #receiptHiddenRoot{position:fixed;left:-99999px;top:-99999px;visibility:hidden}
 .rbox{width:860px;max-width:860px;background:#fff;border:1px solid #e8e8e8;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.08);padding:18px;font-family:Poppins,system-ui,Arial,sans-serif;color:#222}
 .rhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -148,7 +159,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <label>Salón (opcional)</label>
             <input type="text" id="evSalon" placeholder="Ej: Salón Imperial / La Finca" />
 
-            <!-- NUEVO: Precio de salón (opcional) -->
             <label>Precio de salón (opcional)</label>
             <input type="text" id="evSalonPrice" placeholder="Ej: 300000" inputmode="decimal" />
 
@@ -212,7 +222,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <div class="card">
           <h3 style="margin:0 0 6px">Extras/Combos para el NUEVO evento</h3>
 
-          <!-- Buscador para el SELECT -->
           <input id="searchNewEx" type="text" placeholder="Buscar en catálogo de extras..."
                  style="width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:0 0 6px" />
 
@@ -227,7 +236,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 
           <hr style="border:none;border-top:1px dashed #eee;margin:10px 0">
 
-          <!-- 🆕 EXTRA PERSONAL (no queda en catálogo) -->
           <h4 style="margin:0 0 6px">Extra personal (solo para este evento)</h4>
           <div class="inline">
             <input type="text" id="persName" placeholder="Nombre del extra personal" style="flex:2">
@@ -284,7 +292,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
               <input type="text" id="exPrice" placeholder="Ej: 90000" inputmode="decimal" />
             </div>
           </div>
-          <!-- Descripción opcional -->
           <label>Descripción (opcional, para combos o extras)</label>
           <textarea id="exDesc" placeholder="Detalle del combo: incluye X, Y, Z..."></textarea>
 
@@ -315,7 +322,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <div class="card">
           <div class="inline" style="justify-content:space-between;align-items:center">
             <h3 style="margin:0 0 6px">Catálogo</h3>
-            <!-- Buscador del catálogo -->
             <input id="exSearch" type="text" placeholder="Buscar en catálogo..."
                    style="flex:1;min-width:220px;margin-left:10px;padding:10px;border:1px solid #e9e9e9;border-radius:8px">
           </div>
@@ -333,17 +339,14 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
   <div id="tab-evList" class="tabpanel">
     <div class="card">
       <h3 style="margin:0 0 6px">Buscar evento</h3>
-      <!-- Barra de búsqueda ARRIBA (se mantiene) -->
       <input type="text" id="evSearch" placeholder="Escribí el nombre...">
 
-      <!-- NUEVO: Reordenado → Todos, Mendoza, San Juan (Todos activo) -->
       <div class="subtabs">
         <div class="chip active" data-prov="Todos">Todos</div>
         <div class="chip" data-prov="Mendoza">Mendoza</div>
         <div class="chip" data-prov="San Juan">San Juan</div>
       </div>
 
-      <!-- NUEVO: Filtros por tipo (al lado/abajo) -->
       <div class="typefilters" id="typeFilters">
         <div class="chip" data-type="15 años">Cumple 15</div>
         <div class="chip" data-type="18 años">Cumple 18</div>
@@ -357,7 +360,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
   </div>
 </div>
 
-<!-- ======== PANEL DE EVENTO (Abrir) ======== -->
+<!-- ======== PANEL DE EVENTO ======== -->
 <div id="evPanelBk">
   <div id="evPanel" class="card">
     <div class="panelHead">
@@ -378,7 +381,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <div class="card">
           <h3 style="margin:0 0 6px">Extras/Combos del evento</h3>
 
-          <!-- Buscador para el SELECT de extras (evento abierto) -->
           <input id="searchExEvent" type="text" placeholder="Buscar en catálogo de extras..."
                  style="width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:0 0 6px" />
 
@@ -390,7 +392,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <button id="addExtraToEvent" type="button">Agregar</button>
           </div>
 
-          <!-- Extra personal dentro del panel del evento -->
           <hr style="border:none;border-top:1px dashed #eee;margin:10px 0">
           <h4 style="margin:0 0 6px">Extra personal (solo para este evento)</h4>
           <div class="inline">
@@ -409,6 +410,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
           </div>
         </div>
       </div>
+
       <!-- Pagos -->
       <div class="col">
         <div class="card">
@@ -422,6 +424,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <select style="flex:1" id="payTarget" title="A qué se destina este pago">
               <option value="general">General / Mixto</option>
               <option value="extras">Extras</option>
+              <option value="salon">Salón</option>
               <option value="opciones">Opciones (cena)</option>
               <option value="despues">Después de cena</option>
             </select>
@@ -432,7 +435,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <input style="flex:1" id="payDate" type="date" title="Fecha del pago">
           </div>
 
-          <!-- NUEVO: Comprobante OBLIGATORIO -->
           <div class="inline" style="gap:10px;margin-top:6px">
             <input type="file" id="payProof" accept="image/*,application/pdf" style="flex:2">
             <span class="small"><b>Comprobante obligatorio</b> (imagen o PDF)</span>
@@ -449,7 +451,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <div class="small">Total abonado: <span class="total" id="payTotal">$ 0,00</span></div>
             <div class="inline" style="gap:6px">
               <button id="btnGeneralReceipt" class="ghost" type="button">Recibo GENERAL (PDF)</button>
-              <!-- (PNG removido para evitar errores) -->
             </div>
           </div>
         </div>
@@ -476,7 +477,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
               <div class="inline">
                 <input id="editSalon" type="text" placeholder="Nombre del salón">
               </div>
-              <!-- NUEVO: editar precio de salón -->
               <div class="inline" style="margin-top:6px">
                 <input id="editSalonPrice" type="text" placeholder="Precio de salón (opcional)" inputmode="decimal">
               </div>
@@ -553,6 +553,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
     <div class="small" id="authMsg"></div>
   </div>
 </div>
+
 <script>
 /* ============ Firebase SAFE INIT ============ */
 const FIREBASE_CONFIG = {
@@ -564,7 +565,6 @@ const FIREBASE_CONFIG = {
   appId: "1:704291450097:web:f0ce42da229f0d1d30cd50",
   measurementId: "G-FKG9PR8VMH"
 };
-
 const CLOUD_ENABLED =
   !!(FIREBASE_CONFIG.apiKey) &&
   !/^TU_|^YOUR_/i.test(FIREBASE_CONFIG.apiKey);
@@ -594,7 +594,6 @@ const SKIP_LOGIN = 'ok_ev_skip_login';
 function openAuth(){ authBk.style.display='flex'; }
 function closeAuth(){ authBk.style.display='none'; authMsg.textContent=''; }
 
-/* --- Mapeo de errores a mensajes claros --- */
 function mapAuthError(e){
   const code = e?.code || '';
   const M = {
@@ -710,11 +709,7 @@ function num(v){
 const money = (n)=> '$ ' + Number(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
 const isHttp = (u)=> u && /^https?:\/\//i.test(u);
 const uid = ()=>'id_'+Math.random().toString(36).slice(2)+Date.now();
-
-/* 🔎 Normalizador para búsquedas */
-function normalizar(s){
-  return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-}
+function normalizar(s){ return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
 
 /* ===== Storage local ===== */
 const K = { EVENTS:'ok_ev_events', EXTRAS:'ok_ev_extras', MEDIA:'ok_ev_media', PAYSEQ:'ok_ev_payseq', LOGO:'ok_logo' };
@@ -867,7 +862,7 @@ const evPricePer = document.getElementById('evPricePer');
 const evPricePerKids = document.getElementById('evPricePerKids');
 const evProvince = document.getElementById('evProvince');
 const evSalon = document.getElementById('evSalon');
-const evSalonPrice = document.getElementById('evSalonPrice'); /* NUEVO */
+const evSalonPrice = document.getElementById('evSalonPrice');
 const evOption = document.getElementById('evOption');
 
 const evAdultsDinner = document.getElementById('evAdultsDinner');
@@ -935,7 +930,7 @@ const exForEvent = document.getElementById('exForEvent');
 const exQty = document.getElementById('exQty');
 const exPriceOverride = document.getElementById('exPriceOverride');
 const addExtraToEvent = document.getElementById('addExtraToEvent');
-/* Extra personal (panel) */
+
 const persNameEv = document.getElementById('persNameEv');
 const persPriceEv = document.getElementById('persPriceEv');
 const persQtyEv = document.getElementById('persQtyEv');
@@ -951,7 +946,7 @@ const payMethod = document.getElementById('payMethod');
 const payTarget = document.getElementById('payTarget');
 const payPerson = document.getElementById('payPerson');
 const payDate   = document.getElementById('payDate');
-const payProof  = document.getElementById('payProof'); /* NUEVO: comprobante obligatorio */
+const payProof  = document.getElementById('payProof');
 
 const paySave = document.getElementById('paySave');
 const btnGeneralReceipt = document.getElementById('btnGeneralReceipt');
@@ -961,7 +956,7 @@ const payList = document.getElementById('payList');
 const newPricePer = document.getElementById('newPricePer');
 
 const sumSalon = document.getElementById('sumSalon');
-const sumSalonPrice = document.getElementById('sumSalonPrice'); /* NUEVO */
+const sumSalonPrice = document.getElementById('sumSalonPrice');
 const sumPricePer = document.getElementById('sumPricePer');
 const sumBase = document.getElementById('sumBase');
 const sumExtras = document.getElementById('sumExtras');
@@ -977,7 +972,7 @@ const sumAfterPrices = document.getElementById('sumAfterPrices');
 const sumExtrasInline = document.getElementById('sumExtrasInline');
 
 const editSalon = document.getElementById('editSalon');
-const editSalonPrice = document.getElementById('editSalonPrice'); /* NUEVO */
+const editSalonPrice = document.getElementById('editSalonPrice');
 const saveSalon = document.getElementById('saveSalon');
 
 const edAdultsDinner = document.getElementById('edAdultsDinner');
@@ -1006,7 +1001,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
       .forEach(el=> el.addEventListener(evt, updateNewPreview));
   });
 
-  // Chips de provincia
   provChips.forEach(ch=>{
     ch.onclick=()=>{
       provChips.forEach(x=>x.classList.remove('active'));
@@ -1015,7 +1009,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
     };
   });
 
-  // Chips de tipo (multi-select)
   typeChips.forEach(ch=>{
     ch.onclick=()=>{
       ch.classList.toggle('active');
@@ -1023,16 +1016,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
     };
   });
 
-  // Deshacer
   pUndo.addEventListener('click', undoLast);
 
-  // Recibo GENERAL (PDF)
   btnGeneralReceipt.addEventListener('click', ()=>{
     if(!currentEventId) return alert('Abrí un evento');
     generateGeneralReceipt(currentEventId);
   });
 
-  // Buscadores
   if (searchNewEx) searchNewEx.addEventListener('input', ()=> fillCatalogSelects());
   if (searchExEvent) searchExEvent.addEventListener('input', ()=> fillCatalogSelects());
   if (exSearch) exSearch.addEventListener('input', renderCatalog);
@@ -1067,8 +1057,7 @@ function parseDateInput(v){
 }
 function getActiveProvince(){ const a=document.querySelector('.subtabs .chip.active'); return a?.dataset.prov || 'Todos'; }
 function getActiveTypes(){
-  const active = Array.from(document.querySelectorAll('.typefilters .chip.active')).map(x=>x.dataset.type);
-  return active;
+  return Array.from(document.querySelectorAll('.typefilters .chip.active')).map(x=>x.dataset.type);
 }
 
 /* ===== Crear evento ===== */
@@ -1088,7 +1077,7 @@ async function handleCreateEvent(){
   const ka= Math.max(0, num(evKidsAfter.value));
   const pA = Math.max(0, num(evPriceAfter.value));
   const pK = Math.max(0, num(evPriceAfterKids.value));
-  const salonPrice = Math.max(0, num(evSalonPrice.value||0)); /* NUEVO */
+  const salonPrice = Math.max(0, num(evSalonPrice.value||0));
 
   const id=uid();
   const payload={
@@ -1098,7 +1087,7 @@ async function handleCreateEvent(){
     date,
     province:evProvince.value||'San Juan',
     salon:(evSalon.value||'').trim()||null,
-    salonPrice: salonPrice>0 ? salonPrice : 0, /* NUEVO */
+    salonPrice: salonPrice>0 ? salonPrice : 0,
     optionLabel:(evOption.value||'').trim()||null,
     pricePer:pricePer,
     pricePerKids: pKc>0 ? pKc : null,
@@ -1125,7 +1114,7 @@ async function handleCreateEvent(){
   // reset
   evType.value='15 años'; evName.value=''; evDate.value='';
   evProvince.value='San Juan'; evSalon.value=''; evOption.value='';
-  evSalonPrice.value=''; /* NUEVO */
+  evSalonPrice.value='';
   evPricePer.value=''; evPriceAfter.value=''; evPriceAfterKids.value='';
   evPricePerKids.value='';
   evAdultsDinner.value='100'; evKidsDinner.value='0'; evAdultsAfter.value='0'; evKidsAfter.value='0';
@@ -1145,7 +1134,7 @@ newAddEx.addEventListener('click', ()=>{
   });
   newExQty.value='1'; newExPrice.value=''; renderNewItems(); updateNewPreview();
 });
-document.getElementById('newClear').addEventListener('click', ()=>{ newEventItems=[]; renderNewItems(); updateNewPreview(); });
+newClear.addEventListener('click', ()=>{ newEventItems=[]; renderNewItems(); updateNewPreview(); });
 
 // Extra personal NUEVO
 addPersonal.addEventListener('click', ()=>{
@@ -1181,7 +1170,7 @@ function renderNewItems(){
 
 function updateNewPreview(){
   const tempEv={
-    salonPrice: Math.max(0,num(evSalonPrice.value||0)), /* NUEVO */
+    salonPrice: Math.max(0,num(evSalonPrice.value||0)),
     pricePerKids:num(evPricePerKids.value||0),
     pricePer:num(evPricePer.value),
     priceAfter:num(evPriceAfter.value),
@@ -1253,7 +1242,6 @@ function renderCatalog(){
   });
   exList.querySelectorAll('button[data-view]').forEach(b=> b.onclick=()=> loadGallery(b.dataset.view));
 }
-
 exCreate.addEventListener('click', async ()=>{
   const name=(exName.value||'').trim(); if(!name) return alert('Nombre requerido');
   let price=num(exPrice.value||0); if(price<=0) return alert('Precio inválido');
@@ -1264,7 +1252,7 @@ exCreate.addEventListener('click', async ()=>{
   fillCatalogSelects(); renderCatalog();
 });
 
-/* Archivos ítem (data URL o enlace) */
+/* Archivos ítem */
 let selectedFiles=[];
 function fileToDataUrl(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
 const okMediaSize = 900_000;
@@ -1304,18 +1292,13 @@ async function loadGallery(id){
   });
 }
 
-/* ===== Cálculos base y totales ===== */
+/* ===== Cálculos ===== */
 function dinnerUnits(ev){
   const ad = Math.max(0, num(ev.adultsDinner||0));
   const kd = Math.max(0, num(ev.kidsDinner||0));
-
   const priceA = Math.max(0, num(ev.pricePer||0));
   const priceK = Math.max(0, num(ev.pricePerKids||0));
-
-  const kidsFactor = priceA > 0
-    ? (priceK > 0 ? (priceK / priceA) : 0.5)
-    : 0.5;
-
+  const kidsFactor = priceA > 0 ? (priceK > 0 ? (priceK / priceA) : 0.5) : 0.5;
   return ad + kidsFactor * kd;
 }
 function round2(x){ return Math.round((x||0)*100)/100; }
@@ -1340,10 +1323,9 @@ function baseAfters(ev){
   return aa*priceAfter + ka*priceAfterKids;
 }
 function baseOf(ev){
-  const salon = Math.max(0, num(ev.salonPrice||0)); /* NUEVO: suma precio salón */
+  const salon = Math.max(0, num(ev.salonPrice||0));
   return baseDinner(ev) + baseAfters(ev) + salon;
 }
-/* ===== Totales (incluye precio de salón) ===== */
 function computeTotals(ev){
   const base = baseOf(ev);
   let extrasTotal=0; (ev.items||[]).forEach(it=> extrasTotal += num(it.overridePrice??it.price)*num(it.qty||1));
@@ -1362,7 +1344,7 @@ function computeTotals(ev){
   };
 }
 
-/* ===== Lista de eventos (con búsqueda + provincia + tipo) ===== */
+/* ===== Lista de eventos ===== */
 function renderEventList(){
   const q=normalizar(evSearch?.value||'');
   const prov=getActiveProvince();
@@ -1376,7 +1358,7 @@ function renderEventList(){
     .forEach(e=>{
       const t=computeTotals(e);
       const meta=`${e.type||'-'} • ${e.date||'sin fecha'} • ${e.province||'San Juan'}`;
-      const salonTxt=e.salon?` • Salón: ${e.salon}`:'';      
+      const salonTxt=e.salon?` • Salón: ${e.salon}`:'';
       const opt=e.optionLabel||'—';
       const div=document.createElement('div'); div.className='item';
       div.innerHTML=`
@@ -1395,20 +1377,21 @@ function renderEventList(){
         </div>`;
       evList.appendChild(div);
     });
-  evList.querySelectorAll('button[data-open]').forEach(b=> b.onclick=()=> openEventPanel(b.dataset.open));
-  evList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=()=> deleteEventDeep(b.dataset.del));
+  evList.querySelectorAll('button[data-open]').forEach(b=> b.onclick = ()=> openEventPanel(b.dataset.open));
+  evList.querySelectorAll('button[data-del]').forEach(b=> b.onclick = ()=> deleteEventDeep(b.dataset.del));
 }
 evSearch.addEventListener('input', renderEventList);
 
 /* ===== Panel evento ===== */
 pClose.addEventListener('click', ()=> evPanelBk.style.display='none');
 pDelete.addEventListener('click', ()=> currentEventId && deleteEventDeep(currentEventId));
+
 function openEventPanel(id){
   currentEventId=id; const ev=events.find(x=>x.id===id)||{};
   pEvName.textContent=ev.name||'Evento';
   pEvMeta.textContent=`${ev.type||'-'} • ${ev.date||'sin fecha'} • ${ev.province||'San Juan'}`;
   editSalon.value=ev.salon||'';
-  editSalonPrice.value = ev.salonPrice ? num(ev.salonPrice) : ''; /* NUEVO */
+  editSalonPrice.value = ev.salonPrice ? num(ev.salonPrice) : '';
   renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(ev); updateUndoButton();
   evPanelBk.style.display='flex';
   const kidsLbl = document.getElementById('kidsLbl');
@@ -1440,23 +1423,38 @@ async function undoLast(){
   if(isAuthed()) await UCOL('events').doc(id).set(prev);
   const idx=events.findIndex(e=>e.id===id); if(idx>-1) events[idx]=prev; store.set(K.EVENTS, events);
   editSalon.value=prev.salon||'';
-  editSalonPrice.value = prev.salonPrice ? num(prev.salonPrice) : ''; /* NUEVO */
+  editSalonPrice.value = prev.salonPrice ? num(prev.salonPrice) : '';
   renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(prev); updateUndoButton(); renderEventList();
 }
 
-/* ===== Salón (nombre + precio opcional) ===== */
+/* ===== Eliminar evento (funciona abrir/eliminar) ===== */
+async function deleteEventDeep(id){
+  if(!id) return;
+  const ev = events.find(e=>e.id===id);
+  if(!ev) return;
+  if(!confirm(`¿Eliminar el evento "${ev.name}"?`)) return;
+  if(isAuthed()){
+    try{ await UCOL('events').doc(id).delete(); }catch{}
+  }
+  events = events.filter(e=>e.id!==id);
+  store.set(K.EVENTS, events);
+  if(currentEventId===id){ evPanelBk.style.display='none'; currentEventId=null; }
+  renderEventList();
+}
+
+/* ===== Salón ===== */
 saveSalon.addEventListener('click', async ()=>{
   if(!currentEventId) return;
   const ev=events.find(e=>e.id===currentEventId);
   ev.salon=(editSalon.value||'').trim()||null;
-  ev.salonPrice = Math.max(0, num(editSalonPrice.value||0))||0; /* NUEVO */
+  ev.salonPrice = Math.max(0, num(editSalonPrice.value||0))||0;
   ev.baseTotal = baseOf(ev);
   await persistEvent(ev);
   refreshSummary(); renderEventList();
   alert('Salón actualizado ✅');
 });
 
-/* ===== Editar personas & precios “después de cena” ===== */
+/* ===== Editar personas & “después” ===== */
 function fillEditPeople(ev){
   edAdultsDinner.value = ev.adultsDinner||0;
   edKidsDinner.value   = ev.kidsDinner||0;
@@ -1480,242 +1478,231 @@ savePeople.addEventListener('click', async ()=>{
   alert('Cantidades y precios actualizados ✅');
 });
 
-/* ===== Ítems del evento ===== */
+/* ===== Extras en PANEL ===== */
 addExtraToEvent.addEventListener('click', async ()=>{
-  if(!currentEventId) return alert('Abrí un evento');
+  if(!currentEventId) return;
+  const ev=events.find(e=>e.id===currentEventId);
   const id=exForEvent.value; if(!id) return alert('Elegí un ítem');
-  const base=extras.find(x=>x.id===id);
+  const base=extras.find(x=>x.id===id); if(!base) return;
   const qty=Math.max(1,num(exQty.value));
   const override=exPriceOverride.value===''?null:num(exPriceOverride.value);
-  const ev=events.find(e=>e.id===currentEventId); ev.items=ev.items||[];
-  ev.items.unshift({
-    itemId:id,type:base.type||'extra',name:base.name,price:num(base.price||0),
-    desc:(base.desc||''), overridePrice:override, qty
-  });
-  await persistEvent(ev); exQty.value='1'; exPriceOverride.value='';
-  renderEventItems(); refreshSummary(); renderEventList();
+  ev.items = ev.items || [];
+  ev.items.unshift({ id:base.id, type:base.type, name:base.name, price:base.price, desc:(base.desc||""), overridePrice:override, qty });
+  await persistEvent(ev);
+  exQty.value='1'; exPriceOverride.value='';
+  renderEventItems(); refreshSummary();
 });
 addPersonalEv.addEventListener('click', async ()=>{
-  if(!currentEventId) return alert('Abrí un evento');
-  const n=(persNameEv.value||'').trim();
-  const p=num(persPriceEv.value);
-  const q=Math.max(1,num(persQtyEv.value));
+  if(!currentEventId) return;
+  const ev=events.find(e=>e.id===currentEventId);
+  const n=(persNameEv.value||'').trim(); const p=num(persPriceEv.value); const q=Math.max(1,num(persQtyEv.value));
   if(!n) return alert('Poné un nombre para el extra personal');
   if(p<=0) return alert('Precio inválido');
-  const ev=events.find(e=>e.id===currentEventId); ev.items=ev.items||[];
-  ev.items.unshift({ itemId: uid(), type:'personal', name:n, price:p, desc:'', overridePrice:null, qty:q });
+  ev.items = ev.items || [];
+  ev.items.unshift({ id:uid(), type:'personal', name:n, price:p, desc:'', overridePrice:null, qty:q });
   await persistEvent(ev);
   persNameEv.value=''; persPriceEv.value=''; persQtyEv.value='1';
-  renderEventItems(); refreshSummary(); renderEventList();
+  renderEventItems(); refreshSummary();
+});
+evClearExtras.addEventListener('click', async ()=>{
+  if(!currentEventId) return;
+  if(!confirm('¿Vaciar todos los ítems del evento?')) return;
+  const ev=events.find(e=>e.id===currentEventId);
+  ev.items=[];
+  await persistEvent(ev);
+  renderEventItems(); refreshSummary();
 });
 function renderEventItems(){
-  const ev=events.find(e=>e.id===currentEventId);
-  evExtrasList.innerHTML=''; if(!ev){ evExtrasTotal.textContent=money(0); return; }
-  let total=0;
-  (ev.items||[]).forEach((e,idx)=>{
-    const price=num(e.overridePrice ?? e.price);
-    const sub=price*num(e.qty||1); total+=sub;
+  if(!currentEventId){ evExtrasList.innerHTML=''; evExtrasTotal.textContent=money(0); return; }
+  const ev=events.find(e=>e.id===currentEventId) || {items:[]};
+  const items = ev.items||[];
+  evExtrasList.innerHTML=''; let total=0;
+  items.forEach((it,idx)=>{
+    const price=num(it.overridePrice ?? it.price);
+    const sub=price*num(it.qty||1); total+=sub;
+    const badge = it.type==='combo' ? 'Combo' : (it.type==='personal'?'Personal':'Extra');
     const row=document.createElement('div'); row.className='item';
-    const chip=e.type==='combo' ? '<span class="badge">Combo</span>' : (e.type==='personal' ? '<span class="badge">Personal</span>' : '<span class="badge">Extra</span>');
-    row.innerHTML=`<div><b>${e.name}</b> ${chip}
-      ${e.desc ? `<div class="small" style="max-width:520px;white-space:pre-wrap">${e.desc}</div>`:''}
-      <div class="small">Precio: ${money(price)} — Cant: ${e.qty} — Subtotal: <b>${money(sub)}</b></div>
-      <div class="inline" style="margin-top:6px">
-        <input type="text" class="price" value="${price}" data-idx="${idx}" inputmode="decimal">
-        <input type="number" class="qty" value="${e.qty}" min="1" data-idx="${idx}">
-        <button class="ghost" data-upd="${idx}" type="button">Actualizar</button>
-        <button class="ghost" data-del="${idx}" type="button">Quitar</button>
-      </div></div>`;
+    row.innerHTML=`<div><b>${it.name}</b> <span class="badge">${badge}</span>
+      ${it.desc ? `<div class="small" style="max-width:520px;white-space:pre-wrap">${it.desc}</div>`:''}
+      <div class="small">Precio: ${money(price)} — Cant: ${it.qty} — Subtotal: <b>${money(sub)}</b></div>
+    </div>
+    <button class="ghost" data-del="${idx}">Quitar</button>`;
     evExtrasList.appendChild(row);
   });
-  evExtrasTotal.textContent=money(total);
-  evExtrasList.querySelectorAll('button[data-upd]').forEach(b=> b.onclick=async ()=>{
-    const i=+b.dataset.upd; const ev=events.find(e=>e.id===currentEventId);
-    let p=num(evExtrasList.querySelector(`input.price[data-idx="${i}"]`).value);
-    const q=Math.max(1,num(evExtrasList.querySelector(`input.qty[data-idx="${i}"]`).value));
-    ev.items[i].overridePrice=p; ev.items[i].qty=q; await persistEvent(ev);
-    renderEventItems(); refreshSummary(); renderEventList();
-  });
   evExtrasList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=async ()=>{
-    const i=+b.dataset.del; const ev=events.find(e=>e.id===currentEventId); ev.items.splice(i,1);
-    await persistEvent(ev); renderEventItems(); refreshSummary(); renderEventList();
+    const idx = Number(b.dataset.del);
+    const ev=events.find(e=>e.id===currentEventId);
+    ev.items.splice(idx,1);
+    await persistEvent(ev);
+    renderEventItems(); refreshSummary();
   });
-}
-evClearExtras.addEventListener('click', async ()=>{
-  const ev=events.find(e=>e.id===currentEventId); ev.items=[];
-  await persistEvent(ev); renderEventItems(); refreshSummary(); renderEventList();
-});
-
-/* ===== Resumen / pagos / recibos ===== */
-function refreshSummary(){
-  const ev=events.find(e=>e.id===currentEventId);
-  if(!ev){
-    [sumBase,sumExtras,sumTotal,sumPaid,sumRemain,sumPricePer,sumSalonPrice].forEach(el=>el.textContent=money(0));
-    [sumAdultsDinner,sumKidsDinner,sumAdultsAfter,sumKidsAfter].forEach(el=>el.textContent='0');
-    sumSalon.textContent='—'; sumAfterPrices.textContent=`${money(0)} / ${money(0)}`; sumExtrasInline.textContent=money(0); return;
-  }
-  const t=computeTotals(ev);
-  sumSalon.textContent=ev.salon||'—';
-  sumSalonPrice.textContent=money(t.salonPrice); /* NUEVO */
-  sumAdultsDinner.textContent=t.ad;
-  sumKidsDinner.textContent=t.kd;
-  sumAdultsAfter.textContent=t.aa;
-  sumKidsAfter.textContent=t.ka;
-  const priceKids = Math.max(0, num(ev.pricePerKids||0)) || Math.max(0, num(ev.pricePer||0))*0.5;
-  sumPricePer.textContent = `${money(t.pricePer)} / Niños: ${money(priceKids)}`;
-  sumAfterPrices.textContent=`${money(t.priceAfter)} / ${money(t.priceAfterKids)}`;
-  sumExtrasInline.textContent=money(t.extrasTotal);
-  sumBase.textContent=money(t.base);
-  sumExtras.textContent=money(t.extrasTotal);
-  sumTotal.textContent=money(t.total);
-  sumPaid.textContent=money(t.paid);
-  sumRemain.textContent=money(t.remain);
-  payTotal.textContent=money(t.paid);
+  evExtrasTotal.textContent=money(total);
 }
 
-/* Util para archivo a dataURL (comprobante) */
-async function fileToDataURLStrict(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result);
-    r.onerror=rej;
-    r.readAsDataURL(file);
-  });
-}
-
-/* Render de pagos (destino clickeable → abre recibo) */
-function renderPayments(){
-  const ev=events.find(e=>e.id===currentEventId);
-  payList.innerHTML=''; if(!ev) return;
-
-  const destinoMap = {
-    general:  'General / Mixto',
-    extras:   'Extras',
-    opciones: 'Opciones (cena)',
-    despues:  'Después de cena'
-  };
-
-  (ev.payments||[]).slice().reverse().forEach(p=>{
-    const div=document.createElement('div');
-    div.className='item';
-
-    const proofPart = p.proof?.dataUrl
-      ? ((p.proof.type||'').includes('pdf')
-          ? `<a class="link" href="${p.proof.dataUrl}" target="_blank">Ver comprobante (PDF)</a>`
-          : `<a class="link" href="${p.proof.dataUrl}" target="_blank">Ver comprobante</a>`)
-      : `<span class="small" style="color:#b00020">Sin comprobante</span>`;
-
-    const destinoLink = `<a href="#" class="link pay-dest" data-receipt="${p.id}">${destinoMap[p.target||'general']||'General / Mixto'}</a>`;
-    const personaTxt = p.person === 'nino' ? ' — Niño' : ' — Adulto';
-
-    div.innerHTML=`
-      <div>
-        <b>Destino: ${destinoLink}${p.target==='opciones'||p.target==='despues'?personaTxt:''}</b>
-        <div class="small">${new Date(p.at).toLocaleDateString('es-AR')} — ${p.method}</div>
-        <div class="small">Monto: <b>${money(p.amount)}</b></div>
-        <div class="small">${proofPart}</div>
-      </div>
-      <div class="inline">
-        <button class="ghost" data-receipt="${p.id}">Recibo</button>
-        <button class="ghost" data-delpay="${p.id}">Eliminar</button>
-      </div>`;
-    payList.appendChild(div);
-  });
-
-  // Click en “Recibo”
-  payList.querySelectorAll('button[data-receipt]').forEach(b=> b.onclick=()=> generateReceipt(currentEventId,b.dataset.receipt));
-  // Click en el DESTINO también abre el recibo
-  payList.querySelectorAll('a.pay-dest').forEach(a=> a.onclick=(e)=>{ e.preventDefault(); generateReceipt(currentEventId,a.dataset.receipt); });
-  // Eliminar
-  payList.querySelectorAll('button[data-delpay]').forEach(b=> b.onclick=()=> deletePayment(b.dataset.delpay));
-}
-
-async function deletePayment(pid){
-  const ev=events.find(e=>e.id===currentEventId); ev.payments=ev.payments.filter(p=>p.id!==pid);
-  await persistEvent(ev); renderPayments(); refreshSummary(); renderEventList();
-}
-
-/* Guardar pago con COMPROBANTE OBLIGATORIO */
-paySave.addEventListener('click', async ()=>{
-  if(!currentEventId) return alert('Abrí un evento');
-  const amount=num(payAmount.value);
-  if(amount<=0) return alert('Monto inválido');
-
-  // Comprobante obligatorio
-  const f = (payProof.files && payProof.files[0]) ? payProof.files[0] : null;
-  if(!f){ alert('El comprobante es obligatorio (imagen o PDF).'); return; }
-  const dataUrl = await fileToDataURLStrict(f);
-
-  const dateStr = (payDate.value||'').trim();
-  const atMs = dateStr ? new Date(dateStr + 'T00:00:00').getTime() : Date.now();
-
-  const ev=events.find(e=>e.id===currentEventId);
-  ev.payments=ev.payments||[];
-
-  ev.payments.push({
-    id: uid(),
-    amount,
-    method: payMethod.value,
-    target: payTarget.value || 'general',
-    person: payPerson.value || 'adulto',
-    at: atMs,
-    proof: { name: f.name, type: f.type||'file', dataUrl } /* NUEVO */
-  });
-
-  payAmount.value=''; payDate.value=''; payProof.value='';
-
-  await persistEvent(ev);
-  renderPayments();
-  refreshSummary();
-  renderEventList();
-  alert('Pago registrado ✅ (comprobante guardado)');
-});
-
-/* ===== Numeración recibos (local o nube) ===== */
-async function nextSeqAny(){
-  if(isAuthed()){
-    const ref = UCOL('meta').doc('counters');
-    const val = await db.runTransaction(async tx=>{
-      const snap=await tx.get(ref); let cur=0; if(snap.exists) cur = Number(snap.data().payseq||0); cur++; tx.set(ref,{payseq:cur},{merge:true}); return cur;
-    });
-    return String(val).padStart(12,'0');
-  }else{
-    return nextSeqLocal();
-  }
-}
-
-/* ===== Reprecio ===== */
+/* ===== Reprecio (cena) ===== */
 document.getElementById('btnReprice').addEventListener('click', async ()=>{
-  if(!currentEventId) return alert('Abrí un evento');
+  if(!currentEventId) return;
   const ev=events.find(e=>e.id===currentEventId);
-  const newP=num(newPricePer.value); if(newP<=0) return alert('Nuevo precio inválido');
-
-  const oldP=Math.max(0,num(ev.pricePer||0));
-  if(newP===oldP){ newPricePer.value=''; return alert('El nuevo precio es igual al actual.'); }
-
-  const totalUnits = round2(dinnerUnits(ev));
-  const locks = Array.isArray(ev.repriceLocks)? ev.repriceLocks : (ev.repriceLocks=[]);
-  const lockedUnits = round2(locks.reduce((a,l)=> a + (typeof l.units==='number'? l.units : num(l.units)), 0));
-  const remainingUnits = round2(Math.max(0, totalUnits - lockedUnits));
-
-  const totalPaid = (ev.payments||[]).reduce((a,p)=> a+Math.max(0,num(p.amount)), 0);
-  const paidUnitsSoFar = round2(Math.min(totalUnits, totalPaid / Math.max(1,oldP)));
-
-  const additionalUnitsToLock = round2(Math.max(0, Math.min(remainingUnits, paidUnitsSoFar - lockedUnits)));
-
-  if(additionalUnitsToLock > 0){
-    ev.repriceLocks.push({ units: additionalUnitsToLock, price: oldP, at: Date.now() });
-  }
-
+  const newP = Math.max(0,num(newPricePer.value));
+  if(newP<=0) return alert('Precio nuevo inválido');
+  const unitsNow = round2(dinnerUnits(ev));
+  ev.repriceLocks = ev.repriceLocks || [];
+  ev.repriceLocks.push({ units: unitsNow, price: Math.max(0,num(ev.pricePer||0)), at: Date.now() });
   ev.pricePer = newP;
   ev.baseTotal = baseOf(ev);
   await persistEvent(ev);
   newPricePer.value='';
   refreshSummary(); renderEventList();
-  alert('Precio de cena actualizado ✅ (las unidades pagadas quedaron al precio anterior)');
+  alert('Reprecio aplicado ✅');
 });
 
-/* ===== PDF helpers & generación de recibos ===== */
+/* ===== Pagos ===== */
+paySave.addEventListener('click', async ()=>{
+  if(!currentEventId) return;
+  const ev=events.find(e=>e.id===currentEventId);
+  const amount = num(payAmount.value);
+  if(amount<=0) return alert('Monto inválido');
+  const dateStr = (payDate.value||'').trim();
+  const when = dateStr ? new Date(dateStr+'T12:00:00').getTime() : Date.now();
+  const method = (payMethod.value||'Otro');
+  const target = (payTarget.value||'general');
+  const person = (payPerson.value||'adulto');
+
+  const f = payProof.files?.[0];
+  if(!f){ alert('El comprobante es obligatorio.'); return; }
+  const dataUrl = await fileToDataUrl(f);
+
+  const payObj = {
+    id: uid(),
+    amount,
+    method,
+    target,
+    person,
+    at: when,
+    proof: { name: f.name, type: f.type, dataUrl }
+  };
+  ev.payments = ev.payments || [];
+  ev.payments.push(payObj);
+  await persistEvent(ev);
+  payAmount.value=''; payDate.value=''; payProof.value='';
+  renderPayments(); refreshSummary();
+  alert('Pago guardado ✅');
+});
+function renderPayments(){
+  if(!currentEventId){ payList.innerHTML=''; payTotal.textContent=money(0); return; }
+  const ev=events.find(e=>e.id===currentEventId) || {payments:[]};
+  const pays=(ev.payments||[]).slice().sort((a,b)=>a.at-b.at);
+  payList.innerHTML=''; let total=0;
+  const destinoMap = { general:'General / Mixto', extras:'Extras', salon:'Salón', opciones:'Opciones (cena)', despues:'Después de cena' };
+  pays.forEach((p,idx)=>{
+    total += num(p.amount);
+    const li=document.createElement('div'); li.className='item';
+    const det = (p.target==='opciones'||p.target==='despues')
+      ? `${destinoMap[p.target]} — ${(p.person==='nino'?'Niño':'Adulto')}`
+      : (destinoMap[p.target] || 'General / Mixto');
+    const proofLabel = p.proof?.name || 'Comprobante';
+    const proofUrl = p.proof?.dataUrl || p.proof?.url || '';
+    li.innerHTML = `
+      <div>
+        <b>${money(p.amount)}</b> • ${p.method||'-'} • ${new Date(p.at).toLocaleDateString('es-AR')}
+        <div class="small">${det}</div>
+        ${proofUrl ? `<a class="link" href="${proofUrl}" target="_blank">Ver ${proofLabel}</a>` : '<span class="small">Sin comprobante</span>'}
+      </div>
+      <button class="ghost" data-delpay="${idx}">Eliminar</button>
+    `;
+    payList.appendChild(li);
+  });
+  payList.querySelectorAll('button[data-delpay]').forEach(b=> b.onclick=async ()=>{
+    const idx = Number(b.dataset.delpay);
+    const ev=events.find(e=>e.id===currentEventId);
+    ev.payments.splice(idx,1);
+    await persistEvent(ev);
+    renderPayments(); refreshSummary();
+  });
+  payTotal.textContent = money(total);
+}
+
+/* ===== Resumen ===== */
+function refreshSummary(){
+  if(!currentEventId){
+    sumSalon.textContent='—'; sumSalonPrice.textContent=money(0);
+    sumPricePer.textContent=money(0); sumBase.textContent=money(0);
+    sumExtras.textContent=money(0); sumTotal.textContent=money(0);
+    sumPaid.textContent=money(0); sumRemain.textContent=money(0);
+    sumAdultsDinner.textContent='0'; sumKidsDinner.textContent='0';
+    sumAdultsAfter.textContent='0'; sumKidsAfter.textContent='0';
+    sumAfterPrices.textContent=`${money(0)} / ${money(0)}`;
+    sumExtrasInline.textContent=money(0);
+    return;
+  }
+  const ev=events.find(e=>e.id===currentEventId);
+  const t=computeTotals(ev);
+  sumSalon.textContent=ev.salon||'—';
+  sumSalonPrice.textContent=money(t.salonPrice);
+  sumPricePer.textContent=money(t.pricePer);
+  sumBase.textContent=money(t.base);
+  sumExtras.textContent=money(t.extrasTotal);
+  sumTotal.textContent=money(t.total);
+  sumPaid.textContent=money(t.paid);
+  sumRemain.textContent=money(t.remain);
+  sumAdultsDinner.textContent=t.ad;
+  sumKidsDinner.textContent=t.kd;
+  sumAdultsAfter.textContent=t.aa;
+  sumKidsAfter.textContent=t.ka;
+  sumAfterPrices.textContent=`${money(t.priceAfter)} / ${money(t.priceAfterKids)}`;
+  sumExtrasInline.textContent=money(t.extrasTotal);
+}
+
+/* ==== Helpers comprobantes → imagen ==== */
+function dataUrlToUint8Array(dataUrl){
+  const base64 = (dataUrl.split(',')[1] || '');
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i=0;i<len;i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+async function rasterizePdfFirstPage(dataUrl){
+  if (!window.pdfjsLib) return null;
+  try{
+    const arr = dataUrlToUint8Array(dataUrl);
+    const pdf = await pdfjsLib.getDocument({ data: arr }).promise;
+    const page = await pdf.getPage(1);
+    const vp = page.getViewport({ scale: 2 });
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = vp.width; canvas.height = vp.height;
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    return canvas.toDataURL('image/png');
+  }catch{
+    return null;
+  }
+}
+async function proofToImageDataUrl(proof){
+  if(!proof) return null;
+  const src = proof.dataUrl || proof.url || '';
+  if(!src) return null;
+  if (/^data:application\/pdf/i.test(src) || /\.pdf(\?|$)/i.test(src)){
+    return await rasterizePdfFirstPage(src);
+  }
+  if (/^data:image\//i.test(src)) return src;
+  return null;
+}
+function loadImg(src){
+  return new Promise((res,rej)=>{
+    const i = new Image(); i.crossOrigin = 'anonymous';
+    i.onload = ()=> res(i); i.onerror = rej; i.src = src;
+  });
+}
+
+/* ==== Utilidades PDF ==== */
+function ensureJsPDF(){
+  if (!(window.jspdf && window.jspdf.jsPDF)) {
+    alert('No se pudo cargar jsPDF.');
+    return null;
+  }
+  return window.jspdf.jsPDF;
+}
 function savePdf(doc, filename){
   try { doc.save(filename); }
   catch (e) {
@@ -1726,108 +1713,27 @@ function savePdf(doc, filename){
     setTimeout(()=> URL.revokeObjectURL(url), 1500);
   }
 }
-function ensureJsPDF(){
-  if (!(window.jspdf && window.jspdf.jsPDF)) {
-    alert('No se pudo cargar jsPDF. Verificá la etiqueta de <script> de jsPDF o la conexión.');
-    return null;
-  }
-  return window.jspdf.jsPDF;
-}
 
-/* ===== Recibo individual (PDF) ===== */
-async function generateReceipt(eventId, paymentId){
-  const jsPDF = ensureJsPDF(); if(!jsPDF) return;
-  const ev  = events.find(e => e.id === eventId);
-  if(!ev){ alert('Evento no encontrado'); return; }
-  const pay = (ev.payments||[]).find(p => p.id === paymentId);
-  if(!pay){ alert('Pago no encontrado'); return; }
-
-  const seq = await nextSeqAny();
-  const doc = new jsPDF({ unit:'mm', format:'a4' });
-
-  const W=210, H=297, M=10, BOXW=W-2*M, PAD=6, X0=M, Y0=M, innerX=X0+PAD, innerW=BOXW-2*PAD;
-  const moneyFmt = n => '$ ' + Number(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const destinoMap = { general:'General / Mixto', extras:'Extras', opciones:'Opciones (cena)', despues:'Después de cena' };
-  const personaMap = { adulto:'Adulto', nino:'Niño' };
-
-  doc.setLineWidth(0.25);
-  doc.rect(X0, Y0, BOXW, H-2*M);
-
-  try{
-    const i=new Image(); i.crossOrigin='anonymous';
-    i.src=document.getElementById('logoPreview').src;
-    await new Promise(r=> i.onload=r);
-    const c=document.createElement('canvas');
-    c.width=i.width; c.height=i.height; c.getContext('2d').drawImage(i,0,0);
-    doc.addImage(c.toDataURL('image/png'),'PNG', X0+BOXW-32, Y0+6, 24, 24);
-  }catch{}
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(22);
-  doc.text('RECIBO', X0+PAD, Y0+16);
-  doc.setFont('helvetica','normal'); doc.setFontSize(11);
-  doc.text('OK EVENTOS — CATERING Y EGRESADOS', X0+PAD, Y0+22);
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text(`N° ${seq}`, X0+PAD, Y0+30);
-  doc.setFont('helvetica','normal'); doc.setFontSize(11);
-  doc.text(new Date(pay.at).toLocaleString('es-AR'), X0+PAD+40, Y0+30);
-
-  const rowH=12, topY=Y0+36, wL=100, wR=innerW-wL;
-  doc.rect(innerX, topY, wL, rowH);
-  doc.rect(innerX+wL, topY, wR, rowH);
-  doc.setFontSize(10);
-  doc.text('Evento', innerX+2, topY+7);
-  doc.setFont('helvetica','bold');
-  doc.text(doc.splitTextToSize(ev.name||'—', wL-4), innerX+2, topY+11);
-  doc.setFont('helvetica','normal');
-  doc.text('Fecha / Provincia', innerX+wL+2, topY+7);
-  doc.setFont('helvetica','bold');
-  doc.text(`${ev.date||'—'} — ${ev.province||'—'}`, innerX+wL+2, topY+11);
-
-  const y2 = topY + rowH + 6;
-  const detalle = (pay.target==='opciones'||pay.target==='despues')
-    ? `${destinoMap[pay.target]||'General'} — ${personaMap[pay.person||'adulto']}`
-    : (destinoMap[pay.target]||'General / Mixto');
-
-  doc.rect(innerX, y2, innerW, 34);
-  doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text(`RECIBÍ de: ${ev.name||'—'}`, innerX+2, y2+8);
-  doc.setFont('helvetica','normal'); doc.setFontSize(11);
-  doc.text(`Concepto: ${detalle}`, innerX+2, y2+16);
-  doc.text(`Método: ${pay.method||'-'}`, innerX+2, y2+24);
-  doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text(`Importe: ${moneyFmt(pay.amount)}`, innerX+2, y2+32);
-
-  // Nota de comprobante
-  if (pay.proof?.name){
-    doc.setFont('helvetica','normal'); doc.setFontSize(10);
-    doc.text(`Comprobante: ${pay.proof.name}`, innerX, y2+42);
-  }
-
-  const Hline = H - M - 30;
-  doc.line(innerX, Hline, innerX+60, Hline);
-  doc.setFontSize(10);
-  doc.text('Firma y aclaración', innerX, Hline+6);
-
-  const safe=(ev.name||'evento').replace(/[^\p{L}\p{N}_-]+/gu,'_');
-  savePdf(doc, `Recibo_${safe}_${seq}.pdf`);
-}
-
-/* ===== Recibo GENERAL (PDF) ===== */
+/* ==== Recibo GENERAL (PDF) con links internos a comprobantes ==== */
 async function generateGeneralReceipt(eventId){
   const jsPDF = ensureJsPDF(); if(!jsPDF) return;
-  const ev = events.find(e => e.id === eventId);
+
+  const ev = (events || []).find(e => e.id === eventId);
   if(!ev){ alert('Evento no encontrado'); return; }
 
   const t = computeTotals(ev);
   const pays = (ev.payments||[]).slice().sort((a,b)=>a.at-b.at);
 
-  const seq = await nextSeqAny();
+  const seq = (typeof nextSeqAny === 'function')
+    ? await nextSeqAny()
+    : (typeof nextSeqLocal === 'function' ? nextSeqLocal() : String(Date.now()).slice(-12));
+
   const doc = new jsPDF({ unit:'mm', format:'a4' });
 
   const W=210, H=297, M=10, BOXW=W-2*M, PAD=6, X0=M, Y0=M, innerX=X0+PAD, innerW=BOXW-2*PAD;
   const moneyFmt = n => '$ ' + Number(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const destinoMap = { general:'General / Mixto', extras:'Extras', opciones:'Opciones (cena)', despues:'Después de cena' };
+  const destinoMap = { general:'General / Mixto', extras:'Extras', salon:'Salón', opciones:'Opciones (cena)', despues:'Después de cena' };
+  let curPage = 1;
 
   doc.setLineWidth(0.25);
   doc.rect(X0, Y0, BOXW, H-2*M);
@@ -1853,7 +1759,6 @@ async function generateGeneralReceipt(eventId){
 
   let y = Y0+36;
   const rowH=12, col1=innerX, col2=innerX+innerW/3, col3=innerX+innerW*2/3;
-
   const blockH = rowH*2;
   doc.rect(innerX, y, innerW, blockH);
   doc.line(col2, y, col2, y+blockH);
@@ -1880,7 +1785,6 @@ async function generateGeneralReceipt(eventId){
 
   y += blockH + 6;
 
-  // Precio de salón destacado (si hay)
   if (t.salonPrice>0){
     doc.setFont('helvetica','bold'); doc.setFontSize(11);
     doc.text(`Precio de salón: ${moneyFmt(t.salonPrice)}`, innerX, y);
@@ -1888,14 +1792,10 @@ async function generateGeneralReceipt(eventId){
   }
 
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('Pagos registrados', innerX, y);
-  y += 6;
+  doc.text('Pagos registrados', innerX, y); y += 6;
 
   const colW1 = 35, colW2 = 78, colW3 = 30, colW4 = 35;
-  const tcol1 = innerX;
-  const tcol2 = tcol1 + colW1;
-  const tcol3 = tcol2 + colW2;
-  const tcol4 = tcol3 + colW3;
+  const tcol1 = innerX, tcol2 = tcol1 + colW1, tcol3 = tcol2 + colW2, tcol4 = tcol3 + colW3;
   const tableW = innerW, headerH = 10, rowGap = 8;
 
   doc.setLineWidth(0.25);
@@ -1912,13 +1812,15 @@ async function generateGeneralReceipt(eventId){
   let curY = y + headerH;
   doc.setFont('helvetica','normal');
   let sumPaid = 0;
-  const maxY = H - M - 60;
+  const bottomSafe = H - M - 80;
 
-  for (const p of pays){
+  const rowLinkAreas = [];
+  for (let i=0;i<pays.length;i++){
+    const p = pays[i];
     sumPaid += Number(p.amount)||0;
 
-    if (curY + rowGap > maxY){
-      doc.addPage();
+    if (curY + rowGap > bottomSafe){
+      doc.addPage(); curPage++;
       curY = Y0+12;
       doc.setFont('helvetica','bold'); doc.setFontSize(10);
       doc.rect(innerX, curY, tableW, headerH);
@@ -1947,13 +1849,16 @@ async function generateGeneralReceipt(eventId){
     doc.text(p.method||'-', tcol3+2, curY+6);
     doc.text(moneyFmt(p.amount), tcol4 + colW4 - 2, curY+6, { align: 'right' });
 
+    rowLinkAreas[i] = {
+      page: curPage, x: tcol2+1.5, y: curY+1, w: colW2-3, h: rowGap-2
+    };
+
     curY += rowGap;
   }
 
   curY += 8;
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('Totales del evento', innerX, curY);
-  curY += 4;
+  doc.text('Totales del evento', innerX, curY); curY += 4;
 
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.rect(innerX, curY, innerW, 24);
@@ -1966,22 +1871,57 @@ async function generateGeneralReceipt(eventId){
   doc.setFont('helvetica','bold'); doc.setFontSize(14);
   doc.text(`TOTAL A PAGAR: ${moneyFmt(remain)}`, innerX, curY+32);
 
-  const Hline = H - M - 30;
-  doc.line(innerX, Hline, innerX+60, Hline);
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  doc.text('Firma y aclaración', innerX, Hline+6);
+  /* === Comprobantes (cada uno ocupa una hoja completa) + anclas === */
+  const proofAnchors = {};
+  const proofs = [];
+  for (let i=0;i<pays.length;i++){
+    const p = pays[i];
+    const imgUrl = await proofToImageDataUrl(p.proof||null);
+    if (imgUrl) proofs.push({ payIndex:i, imgUrl, at:p.at });
+  }
+
+  if (proofs.length){
+    for (let i=0;i<proofs.length;i++){
+      const { imgUrl, at, payIndex } = proofs[i];
+      doc.addPage(); curPage++;
+
+      const maxW = BOXW;
+      const maxH = H - 2*M;
+
+      try{
+        const img = await loadImg(imgUrl);
+        const ratio = img.width / Math.max(1, img.height);
+        let w = maxW, h = w / ratio;
+        if (h > maxH) { h = maxH; w = h * ratio; }
+
+        const x = X0 + (BOXW - w) / 2;
+        const y = Y0 + (maxH - h) / 2;
+
+        doc.addImage(imgUrl, 'PNG', x, y, w, h);
+
+        // Pie con fecha (opcional)
+        doc.setFont('helvetica','normal'); doc.setFontSize(9);
+        doc.text(new Date(at).toLocaleString('es-AR'), X0 + 2, H - M - 4);
+
+        proofAnchors[payIndex] = { page: curPage, top: y };
+      }catch{}
+    }
+  }
+
+  // Links invisibles desde tabla de pagos al comprobante correspondiente
+  for (let i=0;i<pays.length;i++){
+    const area = rowLinkAreas[i];
+    const anchor = proofAnchors[i];
+    if (!area || !anchor) continue;
+    doc.setPage(area.page);
+    doc.link(area.x, area.y, area.w, area.h, {
+      pageNumber: anchor.page,
+      top: anchor.top
+    });
+  }
 
   const safe=(ev.name||'evento').replace(/[^\p{L}\p{N}_-]+/gu,'_');
   savePdf(doc, `Recibo_GENERAL_${safe}_${seq}.pdf`);
-}
-
-/* ===== Eliminar evento ===== */
-async function deleteEventDeep(eventId){
-  if(!confirm('¿Eliminar el evento y TODOS sus datos?')) return;
-  if(isAuthed()) await UCOL('events').doc(eventId).delete();
-  events = events.filter(e=>e.id!==eventId); store.set(K.EVENTS, events);
-  if(currentEventId===eventId){ evPanelBk.style.display='none'; currentEventId=null; }
-  renderEventList(); updateUndoButton(); alert('Evento eliminado ✅');
 }
 </script>
 </body>
