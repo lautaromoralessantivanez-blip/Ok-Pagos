@@ -162,8 +162,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <label>Precio de salón (opcional)</label>
             <input type="text" id="evSalonPrice" placeholder="Ej: 300000" inputmode="decimal" />
 
-            <label>Opción (paquete/plan del evento)</label>
-            <input type="text" id="evOption" placeholder="Ej: Opción Dorada / Paquete Full" />
+            <!-- Campo Opción/Plan eliminado -->
 
             <div class="row">
               <div class="col">
@@ -818,6 +817,7 @@ auth.onAuthStateChanged(async (user)=>{
       store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
     });
 
+    // Seguimos escuchando pero vamos a reordenar en renderEventList() por fecha ascendente
     unsubEvents = UCOL('events').orderBy('date','desc').onSnapshot(s=>{
       events = []; s.forEach(d=> events.push(d.data()));
       store.set(K.EVENTS, events); renderEventList();
@@ -863,7 +863,6 @@ const evPricePerKids = document.getElementById('evPricePerKids');
 const evProvince = document.getElementById('evProvince');
 const evSalon = document.getElementById('evSalon');
 const evSalonPrice = document.getElementById('evSalonPrice');
-const evOption = document.getElementById('evOption');
 
 const evAdultsDinner = document.getElementById('evAdultsDinner');
 const evKidsDinner = document.getElementById('evKidsDinner');
@@ -1088,7 +1087,7 @@ async function handleCreateEvent(){
     province:evProvince.value||'San Juan',
     salon:(evSalon.value||'').trim()||null,
     salonPrice: salonPrice>0 ? salonPrice : 0,
-    optionLabel:(evOption.value||'').trim()||null,
+    // optionLabel eliminado
     pricePer:pricePer,
     pricePerKids: pKc>0 ? pKc : null,
     priceAfter:pA,
@@ -1113,7 +1112,7 @@ async function handleCreateEvent(){
 
   // reset
   evType.value='15 años'; evName.value=''; evDate.value='';
-  evProvince.value='San Juan'; evSalon.value=''; evOption.value='';
+  evProvince.value='San Juan'; evSalon.value='';
   evSalonPrice.value='';
   evPricePer.value=''; evPriceAfter.value=''; evPriceAfterKids.value='';
   evPricePerKids.value='';
@@ -1279,6 +1278,7 @@ btnAddLink.addEventListener('click', async ()=>{
   if(isAuthed()) await UCOL('media').doc(id).set({arr:mediaMap[id]}); store.set(K.MEDIA, mediaMap); exLink.value=''; await loadGallery(id);
 });
 async function loadGallery(id){
+  const exMedia = document.getElementById('exMedia');
   exMedia.innerHTML=''; const arr=mediaMap[id]||[];
   if(!arr.length){ exMedia.innerHTML='<div class="small">Sin archivos</div>'; return; }
   arr.forEach(m=>{
@@ -1345,13 +1345,24 @@ function computeTotals(ev){
 }
 
 /* ===== Lista de eventos ===== */
+function parseDateForSort(d){
+  if(!d) return Infinity;
+  // esperamos "YYYY-MM-DD"
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  if(!m) return Infinity;
+  const t = new Date(`${m[1]}-${m[2]}-${m[3]}T12:00:00`).getTime();
+  return isNaN(t) ? Infinity : t;
+}
 function renderEventList(){
   const q=normalizar(evSearch?.value||'');
   const prov=getActiveProvince();
   const activeTypes=getActiveTypes();
 
+  // Ordenar del más cercano al más lejano por fecha de realización
+  const sorted = (events||[]).slice().sort((a,b)=> parseDateForSort(a.date) - parseDateForSort(b.date));
+
   evList.innerHTML='';
-  events
+  sorted
     .filter(e=> !q || normalizar(e.name||'').includes(q))
     .filter(e=> prov==='Todos'?true:((e.province||'San Juan')===prov))
     .filter(e=> activeTypes.length? activeTypes.includes(e.type||'') : true)
@@ -1359,7 +1370,6 @@ function renderEventList(){
       const t=computeTotals(e);
       const meta=`${e.type||'-'} • ${e.date||'sin fecha'} • ${e.province||'San Juan'}`;
       const salonTxt=e.salon?` • Salón: ${e.salon}`:'';
-      const opt=e.optionLabel||'—';
       const div=document.createElement('div'); div.className='item';
       div.innerHTML=`
         <div>
@@ -1368,7 +1378,6 @@ function renderEventList(){
           <div class="small">Cena A:${t.ad} • N:${t.kd} | Después A:${t.aa} • N:${t.ka}</div>
         </div>
         <div class="inline">
-          <span class="small">Opción: <b>${opt}</b></span>
           <span class="small">Precio cena: <b>${money(e.pricePer||0)}</b></span>
           <span class="small">Salón: <b>${money(t.salonPrice)}</b></span>
           <span class="small">Faltante: <b>${money(t.remain)}</b></span>
@@ -1427,7 +1436,7 @@ async function undoLast(){
   renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(prev); updateUndoButton(); renderEventList();
 }
 
-/* ===== Eliminar evento (funciona abrir/eliminar) ===== */
+/* ===== Eliminar evento ===== */
 async function deleteEventDeep(id){
   if(!id) return;
   const ev = events.find(e=>e.id===id);
@@ -1539,21 +1548,18 @@ function renderEventItems(){
   evExtrasTotal.textContent=money(total);
 }
 
-/* ===== REPRECIO (cena) — FIX: solo afecta unidades NO pagadas y niños = 50% si no hay precio específico ===== */
+/* ===== REPRECIO ===== */
 document.getElementById('btnReprice').addEventListener('click', async ()=>{
   if(!currentEventId) return;
   const ev=events.find(e=>e.id===currentEventId);
   const newP = Math.max(0,num(newPricePer.value));
   if(newP<=0) return alert('Precio nuevo inválido');
 
-  // Array de locks válido
   ev.repriceLocks = Array.isArray(ev.repriceLocks) ? ev.repriceLocks : [];
 
-  // Precio anterior (adulto)
   const oldP = Math.max(0, num(ev.pricePer||0));
   if(oldP<=0){ alert('Precio actual inválido'); return; }
 
-  // 1) Calcular cuánto se abonó a "opciones (cena)" (adultos o niños) en total
   let totalPaidDinner = 0;
   (ev.payments||[]).forEach(p=>{
     if((p.target||'')==='opciones'){
@@ -1561,7 +1567,6 @@ document.getElementById('btnReprice').addEventListener('click', async ()=>{
     }
   });
 
-  // 2) Monto ya "congelado" en locks anteriores (suma de unidades * precio histórico)
   let lockedAmount = 0;
   ev.repriceLocks.forEach(l=>{
     const u = (typeof l.units === 'number') ? l.units : num(l.units);
@@ -1569,28 +1574,19 @@ document.getElementById('btnReprice').addEventListener('click', async ()=>{
     lockedAmount += u * pr;
   });
 
-  // Si por el bug anterior los locks superan lo realmente pagado, los reiniciamos
   if(lockedAmount > totalPaidDinner + 0.01){
     ev.repriceLocks = [];
     lockedAmount = 0;
   }
 
-  // 3) Monto adicional a congelar ahora (lo pagado menos lo ya congelado)
   const amountToLock = Math.max(0, totalPaidDinner - lockedAmount);
-
-  // Convertimos ese monto a "unidades adulto-equivalentes" al precio ANTERIOR
-  // (adulto = 1 unidad, niño = 0.5 si no hay precio de niño; equivalencia: amount / oldP)
   const addUnits = oldP > 0 ? round2(amountToLock / oldP) : 0;
 
   if(addUnits > 0){
     ev.repriceLocks.push({ units: addUnits, price: oldP, at: Date.now() });
   }
 
-  // 4) Aplicar el nuevo precio adulto
   ev.pricePer = newP;
-  // Nota: Si el precio de NIÑOS está vacío, ya se toma 50% del actual en los cálculos (dinnerUnits())
-
-  // 5) Recalcular totales y persistir
   ev.baseTotal = baseOf(ev);
   await persistEvent(ev);
   newPricePer.value='';
@@ -1756,7 +1752,7 @@ function savePdf(doc, filename){
   }
 }
 
-/* ==== Recibo GENERAL (PDF) con links internos a comprobantes ==== */
+/* ==== Recibo GENERAL (PDF) — sin "Total a pagar" y sin "Opción/Plan" ==== */
 async function generateGeneralReceipt(eventId){
   const jsPDF = ensureJsPDF(); if(!jsPDF) return;
 
@@ -1800,32 +1796,34 @@ async function generateGeneralReceipt(eventId){
   doc.text(new Date().toLocaleString('es-AR'), X0+PAD+32, Y0+30);
 
   let y = Y0+36;
-  const rowH=12, col1=innerX, col2=innerX+innerW/3, col3=innerX+innerW*2/3;
-  const blockH = rowH*2;
-  doc.rect(innerX, y, innerW, blockH);
-  doc.line(col2, y, col2, y+blockH);
-  doc.line(col3, y, col3, y+blockH);
-  doc.line(innerX, y+rowH, innerX+innerW, y+rowH);
 
+  // Fila 1 (3 columnas): Nombre / Fecha / Provincia
+  const r1H=12, c1=innerX, c2=innerX+innerW/3, c3=innerX+innerW*2/3;
+  doc.rect(innerX, y, innerW, r1H);
+  doc.line(c2, y, c2, y+r1H);
+  doc.line(c3, y, c3, y+r1H);
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  doc.text('Nombre del evento', col1+2, y+5);
-  doc.text('Fecha evento',      col2+2, y+5);
-  doc.text('Provincia',         col3+2, y+5);
+  doc.text('Nombre del evento', c1+2, y+5);
+  doc.text('Fecha evento',      c2+2, y+5);
+  doc.text('Provincia',         c3+2, y+5);
   doc.setFont('helvetica','bold');
-  doc.text(ev.name||'—',        col1+2, y+10);
-  doc.text(ev.date||'—',        col2+2, y+10);
-  doc.text(ev.province||'—',    col3+2, y+10);
+  doc.text(ev.name||'—',        c1+2, y+10);
+  doc.text(ev.date||'—',        c2+2, y+10);
+  doc.text(ev.province||'—',    c3+2, y+10);
 
+  // Fila 2 (2 columnas): Salón / Precio cena  (sin Opción/Plan)
+  y += r1H;
+  const r2H=12, cA=innerX, cB=innerX+innerW/2;
+  doc.rect(innerX, y, innerW, r2H);
+  doc.line(cB, y, cB, y+r2H);
   doc.setFont('helvetica','normal');
-  doc.text('Salón',             col1+2, y+rowH+5);
-  doc.text('Opción/Plan',       col2+2, y+rowH+5);
-  doc.text('Precio cena',       col3+2, y+rowH+5);
+  doc.text('Salón',       cA+2, y+5);
+  doc.text('Precio cena', cB+2, y+5);
   doc.setFont('helvetica','bold');
-  doc.text(ev.salon||'—',       col1+2, y+rowH+10);
-  doc.text(ev.optionLabel||'—', col2+2, y+rowH+10);
-  doc.text(moneyFmt(t.pricePer),col3+2, y+rowH+10);
+  doc.text(ev.salon||'—', cA+2, y+10);
+  doc.text(moneyFmt(t.pricePer), cB+2, y+10);
 
-  y += blockH + 6;
+  y += r2H + 6;
 
   if (t.salonPrice>0){
     doc.setFont('helvetica','bold'); doc.setFontSize(11);
@@ -1909,9 +1907,7 @@ async function generateGeneralReceipt(eventId){
   doc.text(`Extras: ${moneyFmt(t.extrasTotal)}`, innerX+2, curY+14);
   doc.text(`Precios después A/N: ${moneyFmt(t.priceAfter)} / ${moneyFmt(t.priceAfterKids)}`, innerX+innerW/2, curY+14);
 
-  const remain = Math.max(0, t.total - sumPaid);
-  doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text(`TOTAL A PAGAR: ${moneyFmt(remain)}`, innerX, curY+32);
+  // IMPORTANTE: ya NO se imprime "TOTAL A PAGAR" en el recibo
 
   /* === Comprobantes (cada uno ocupa una hoja completa) + anclas === */
   const proofAnchors = {};
@@ -1937,20 +1933,18 @@ async function generateGeneralReceipt(eventId){
         if (h > maxH) { h = maxH; w = h * ratio; }
 
         const x = X0 + (BOXW - w) / 2;
-        const y = Y0 + (maxH - h) / 2;
+        const yImg = Y0 + (maxH - h) / 2;
 
-        doc.addImage(imgUrl, 'PNG', x, y, w, h);
+        doc.addImage(imgUrl, 'PNG', x, yImg, w, h);
 
-        // Pie con fecha (opcional)
         doc.setFont('helvetica','normal'); doc.setFontSize(9);
         doc.text(new Date(at).toLocaleString('es-AR'), X0 + 2, H - M - 4);
 
-        proofAnchors[payIndex] = { page: curPage, top: y };
+        proofAnchors[payIndex] = { page: curPage, top: yImg };
       }catch{}
     }
   }
 
-  // Links invisibles desde tabla de pagos al comprobante correspondiente
   for (let i=0;i<pays.length;i++){
     const area = rowLinkAreas[i];
     const anchor = proofAnchors[i];
