@@ -300,7 +300,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
           <textarea id="exDesc" placeholder="Detalle del combo: incluye X, Y, Z..."></textarea>
           <div class="inline" style="gap:6px">
             <button id="exCreate" type="button">Guardar</button>
-            <!-- *** CAMBIO: botón para actualizar existente -->
+            <!-- botón para actualizar existente -->
             <button id="exUpdate" type="button" class="ghost" style="display:none">Actualizar</button>
             <span id="exEditInfo" class="small" style="display:none">Editando: <b id="exEditName"></b></span>
           </div>
@@ -347,7 +347,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
       <h3 style="margin:0 0 6px">Buscar evento</h3>
       <div class="inline wrap-search" style="gap:10px;align-items:center">
         <input type="text" id="evSearch" placeholder="Escribí el nombre..." style="flex:1;min-width:200px;">
-        <!-- NUEVO: búsqueda por fecha -->
+        <!-- buscador por fecha -->
         <input type="date" id="evSearchDate" style="width:180px;">
       </div>
       <div class="subtabs">
@@ -931,10 +931,10 @@ const exName = document.getElementById('exName');
 const exPrice = document.getElementById('exPrice');
 const exDesc = document.getElementById('exDesc');
 const exCreate = document.getElementById('exCreate');
-const exUpdate = document.getElementById('exUpdate'); // CAMBIO
-const exEditInfo = document.getElementById('exEditInfo'); // CAMBIO
-const exEditName = document.getElementById('exEditName'); // CAMBIO
-let editingExtraId = null; // CAMBIO
+const exUpdate = document.getElementById('exUpdate');
+const exEditInfo = document.getElementById('exEditInfo');
+const exEditName = document.getElementById('exEditName');
+let editingExtraId = null;
 
 const exSelectFiles = document.getElementById('exSelectFiles');
 const exList = document.getElementById('exList');
@@ -948,7 +948,7 @@ const exSearch = document.getElementById('exSearch');
 
 /* ===== Refs (lista) ===== */
 const evSearch = document.getElementById('evSearch');
-const evSearchDate = document.getElementById('evSearchDate'); // NUEVO
+const evSearchDate = document.getElementById('evSearchDate');
 const evList = document.getElementById('evList');
 const provChips = Array.from(document.querySelectorAll('.subtabs .chip'));
 const typeChips = Array.from(document.querySelectorAll('.typefilters .chip'));
@@ -1055,7 +1055,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if (searchExEvent) searchExEvent.addEventListener('input', ()=> fillCatalogSelects());
   if (exSearch) exSearch.addEventListener('input', renderCatalog);
 
-  // NUEVO: buscar por fecha
   if (evSearchDate) evSearchDate.addEventListener('change', renderEventList);
 
   if (!CLOUD_ENABLED || !auth.currentUser){
@@ -1288,7 +1287,6 @@ function renderCatalog(){
       const row=document.createElement('div');
       row.className='item';
       const badge=it.type==='combo'?'<span class="badge">Combo</span>':'<span class="badge">Extra</span>';
-      // *** CAMBIO: cada fila es click para editar
       row.innerHTML=
         `<div style="cursor:pointer" data-edit="${it.id}">
           <b>${it.name}</b> ${badge}
@@ -1298,7 +1296,6 @@ function renderCatalog(){
       exList.appendChild(row);
     });
 
-  // listeners para editar
   exList.querySelectorAll('[data-edit]').forEach(el=>{
     el.onclick = ()=>{
       const id = el.getAttribute('data-edit');
@@ -1312,7 +1309,6 @@ function renderCatalog(){
       exUpdate.style.display = 'inline-block';
       exEditInfo.style.display = 'inline-block';
       exEditName.textContent = ext.name || '';
-      // scroll arriba si hace falta
       document.getElementById('tab-ex').scrollIntoView({behavior:'smooth', block:'start'});
     };
   });
@@ -1336,7 +1332,6 @@ exCreate.addEventListener('click', async ()=>{
   fillCatalogSelects();
   renderCatalog();
 });
-// *** CAMBIO: actualizar existente
 exUpdate.addEventListener('click', async ()=>{
   if(!editingExtraId) return;
   const name=(exName.value||'').trim();
@@ -1509,7 +1504,7 @@ function parseDateForSort(d){
 }
 function renderEventList(){
   const q=normalizar(evSearch?.value||'');
-  const dfilter = (evSearchDate?.value||'').trim(); // NUEVO
+  const dfilter = (evSearchDate?.value||'').trim();
   const prov=getActiveProvince();
   const activeTypes=getActiveTypes();
   const sorted = (events||[]).slice().sort((a,b)=> parseDateForSort(a.date) - parseDateForSort(b.date));
@@ -1517,7 +1512,7 @@ function renderEventList(){
 
   sorted
     .filter(e=> !q || normalizar(e.name||'').includes(q))
-    .filter(e=> !dfilter || (e.date||'')===dfilter) // NUEVO filtro por fecha exacta
+    .filter(e=> !dfilter || (e.date||'')===dfilter)
     .filter(e=> prov==='Todos'?true:((e.province||'San Juan')===prov))
     .filter(e=> activeTypes.length? activeTypes.includes(e.type||'') : true)
     .forEach(e=>{
@@ -1544,7 +1539,6 @@ function renderEventList(){
   evList.querySelectorAll('button[data-open]').forEach(btn=>{
     btn.onclick = ()=>{
       const id = btn.getAttribute('data-open');
-      console.log('👉 abrir evento:', id);
       openEventPanel(id);
     };
   });
@@ -1569,8 +1563,7 @@ function openEventPanel(id){
   }
 
   if(!ev){
-    console.warn('⚠️ No se encontró el evento con id:', id, 'en', events);
-    alert('No se pudo abrir el evento porque no se encontró en la lista. Mirá la consola (F12) para ver el id que llegó.');
+    alert('No se pudo abrir el evento.');
     return;
   }
 
@@ -2066,7 +2059,6 @@ async function generateGeneralReceipt(eventId){
 
   let y = Y0+36;
 
-  // datos evento
   const r1H=12, c1=innerX, c2=innerX+innerW/3, c3=innerX+innerW*2/3;
   doc.rect(innerX, y, innerW, r1H);
   doc.line(c2, y, c2, y+r1H);
@@ -2103,7 +2095,6 @@ async function generateGeneralReceipt(eventId){
   doc.text('Pagos registrados', innerX, y);
   y += 6;
 
-  // tabla
   const colW1 = 35, colW2 = 78, colW3 = 30, colW4 = 35;
   const tcol1 = innerX, tcol2 = tcol1 + colW1, tcol3 = tcol2 + colW2, tcol4 = tcol3 + colW3;
   const tableW = innerW, headerH = 10, rowGap = 8;
@@ -2123,35 +2114,27 @@ async function generateGeneralReceipt(eventId){
   let sumPaid = 0;
   const bottomSafe = H - M - 80;
   const rowLinkAreas = [];
+
+  // *** CAMBIO: función para obtener la cantidad pagada SIN recalcular con precio nuevo
+  function stableQtyFromPayment(p){
+    if (p.target === 'opciones' || p.target === 'despues') {
+      if (p.paidQty !== undefined && p.paidQty !== null && p.paidQty !== '-' && !isNaN(p.paidQty)) {
+        return Number(p.paidQty);
+      }
+      const up = Number(p.unitPricePaid || 0);
+      if (up > 0) {
+        return Math.floor(Number(p.amount || 0) / up);
+      }
+      return 0;
+    }
+    return '-';
+  }
+
   for (let i=0;i<pays.length;i++){
     const p = pays[i];
     sumPaid += Number(p.amount)||0;
 
-    let shownQty = '-';
-    if (p.target === 'opciones' || p.target === 'despues') {
-      if (typeof p.paidQty === 'number') {
-        shownQty = String(p.paidQty);
-      } else if (p.paidQty === '-') {
-        shownQty = '-';
-      } else {
-        let unitPrice = 0;
-        if (p.target === 'opciones') {
-          if (p.person === 'nino') {
-            const kidsPrice = num(ev.pricePerKids || 0);
-            unitPrice = kidsPrice > 0 ? kidsPrice : num(ev.pricePer || 0) * 0.5;
-          } else {
-            unitPrice = num(ev.pricePer || 0);
-          }
-        } else if (p.target === 'despues') {
-          if (p.person === 'nino') {
-            unitPrice = num(ev.priceAfterKids || 0);
-          } else {
-            unitPrice = num(ev.priceAfter || 0);
-          }
-        }
-        shownQty = unitPrice > 0 ? String(Math.floor(num(p.amount)/unitPrice)) : '0';
-      }
-    }
+    const qtyStable = stableQtyFromPayment(p);
 
     if (curY + rowGap > bottomSafe){
       doc.addPage(); curPage++;
@@ -2179,7 +2162,7 @@ async function generateGeneralReceipt(eventId){
     doc.line(tcol4, curY, tcol4, curY+rowGap);
     doc.text(new Date(p.at).toLocaleDateString('es-AR'), tcol1+2, curY+6);
     doc.text(det, tcol2+2, curY+6);
-    doc.text(shownQty, tcol3+2, curY+6);
+    doc.text(String(qtyStable), tcol3+2, curY+6);
     doc.text(moneyFmt(p.amount), tcol4 + colW4 - 2, curY+6, { align: 'right' });
     rowLinkAreas[i] = { page: curPage, x: tcol2+1.5, y: curY+1, w: colW2-3, h: rowGap-2 };
     curY += rowGap;
@@ -2196,46 +2179,36 @@ async function generateGeneralReceipt(eventId){
   doc.text(`Extras: ${moneyFmt(t.extrasTotal)}`, innerX+2, curY+14);
   doc.text(`Precios después A/N: ${moneyFmt(t.priceAfter)} / ${moneyFmt(t.priceAfterKids)}`, innerX+innerW/2, curY+14);
 
-  // === BLOQUE: Faltante de pago (sin planificados) ===
+  // === BLOQUE: Faltante de pago manteniendo cantidades ===
   let yF = curY + 24 + 4;
 
-  // cantidades totales
   const totalCenaAdultos = Math.max(0, num(ev.adultsDinner || 0));
   const totalCenaNinos = Math.max(0, num(ev.kidsDinner || 0));
   const totalDespuesAdultos = Math.max(0, num(ev.adultsAfter || 0));
   const totalDespuesNinos = Math.max(0, num(ev.kidsAfter || 0));
 
-  // precios
-  const precioCenaAdulto = Math.max(0, num(ev.pricePer || 0));
-  const precioCenaNino = (()=> {
-    const pK = num(ev.pricePerKids || 0);
-    if (pK > 0) return pK;
-    return precioCenaAdulto * 0.5;
-  })();
-  const precioDespuesAdulto = Math.max(0, num(ev.priceAfter || 0));
-  const precioDespuesNino = Math.max(0, num(ev.priceAfterKids || 0));
-
-  // pagos
-  let pagadoCenaAdultos = 0;
-  let pagadoCenaNinos = 0;
-  let pagadoDespuesAdultos = 0;
-  let pagadoDespuesNinos = 0;
+  let pagadasCenaAdultos = 0;
+  let pagadasCenaNinos = 0;
+  let pagadasDespuesAdultos = 0;
+  let pagadasDespuesNinos = 0;
   let pagadoExtras = 0;
   let pagadoSalon = 0;
 
   for (const p of pays) {
     const amt = Math.max(0, num(p.amount));
     if (p.target === 'opciones') {
+      const qStable = stableQtyFromPayment(p);
       if (p.person === 'nino') {
-        pagadoCenaNinos += amt;
+        if (typeof qStable === 'number') pagadasCenaNinos += qStable;
       } else {
-        pagadoCenaAdultos += amt;
+        if (typeof qStable === 'number') pagadasCenaAdultos += qStable;
       }
     } else if (p.target === 'despues') {
+      const qStable = stableQtyFromPayment(p);
       if (p.person === 'nino') {
-        pagadoDespuesNinos += amt;
+        if (typeof qStable === 'number') pagadasDespuesNinos += qStable;
       } else {
-        pagadoDespuesAdultos += amt;
+        if (typeof qStable === 'number') pagadasDespuesAdultos += qStable;
       }
     } else if (p.target === 'extras') {
       pagadoExtras += amt;
@@ -2244,28 +2217,15 @@ async function generateGeneralReceipt(eventId){
     }
   }
 
-  // montos previstos
-  const previstoCenaAdultos = totalCenaAdultos * precioCenaAdulto;
-  const previstoCenaNinos = totalCenaNinos * precioCenaNino;
-  const previstoDespuesAdultos = totalDespuesAdultos * precioDespuesAdulto;
-  const previstoDespuesNinos = totalDespuesNinos * precioDespuesNino;
-
-  // faltantes en plata
-  const faltanteCenaAdultosPlata = Math.max(0, previstoCenaAdultos - pagadoCenaAdultos);
-  const faltanteCenaNinosPlata = Math.max(0, previstoCenaNinos - pagadoCenaNinos);
-  const faltanteDespuesAdultosPlata = Math.max(0, previstoDespuesAdultos - pagadoDespuesAdultos);
-  const faltanteDespuesNinosPlata = Math.max(0, previstoDespuesNinos - pagadoDespuesNinos);
-
-  // convertir a OPCIONES (solo lo que faltan) → lo que pediste
-  const faltanteCenaAdultosOpc = precioCenaAdulto > 0 ? Math.ceil(faltanteCenaAdultosPlata / precioCenaAdulto) : 0;
-  const faltanteCenaNinosOpc = precioCenaNino > 0 ? Math.ceil(faltanteCenaNinosPlata / precioCenaNino) : 0;
-  const faltanteDespuesAdultosOpc = precioDespuesAdulto > 0 ? Math.ceil(faltanteDespuesAdultosPlata / precioDespuesAdulto) : 0;
-  const faltanteDespuesNinosOpc = precioDespuesNino > 0 ? Math.ceil(faltanteDespuesNinosPlata / precioDespuesNino) : 0;
+  const faltanteCenaAdultosOpc = Math.max(0, totalCenaAdultos - pagadasCenaAdultos);
+  const faltanteCenaNinosOpc = Math.max(0, totalCenaNinos - pagadasCenaNinos);
+  const faltanteDespuesAdultosOpc = Math.max(0, totalDespuesAdultos - pagadasDespuesAdultos);
+  const faltanteDespuesNinosOpc = Math.max(0, totalDespuesNinos - pagadasDespuesNinos);
 
   const faltanteExtras = Math.max(0, t.extrasTotal - pagadoExtras);
   const faltanteSalon = Math.max(0, t.salonPrice - pagadoSalon);
 
-  if (yF + 28 > H - M - 10) {
+  if (yF + 32 > H - M - 10) {
     doc.addPage();
     curPage++;
     yF = Y0 + 12;
@@ -2279,7 +2239,6 @@ async function generateGeneralReceipt(eventId){
   const blockH = 32;
   doc.rect(innerX, yF, innerW, blockH);
 
-  // *** CAMBIO: sin "(x planificados)"
   doc.text(`Cena adulto: ${faltanteCenaAdultosOpc} opciones`, innerX+2, yF+6);
   doc.text(`Cena niño: ${faltanteCenaNinosOpc} opciones`, innerX+innerW/2, yF+6);
 
