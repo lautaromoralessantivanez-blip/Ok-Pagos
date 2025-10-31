@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -27,9 +27,21 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <style>
-:root{ --bg:#F5F4F0; --card:#fff; --text:#222629; --muted:#6B7280; --gold-1:#F2D15F; --gold-2:#CFA33C; }
+:root{
+  --bg:#F5F4F0;
+  --card:#fff;
+  --text:#222629;
+  --muted:#6B7280;
+  --gold-1:#F2D15F;
+  --gold-2:#CFA33C;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Poppins,system-ui,Arial,sans-serif}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Poppins,system-ui,Arial,sans-serif
+}
 .wrap{max-width:1240px;margin:22px auto;padding:16px}
 header{display:flex;gap:14px;align-items:center;margin-bottom:12px}
 header img{width:68px;height:68px;border-radius:12px;object-fit:cover}
@@ -38,8 +50,11 @@ h1{font-size:20px;margin:0}
 .card{background:var(--card);border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.06);padding:14px}
 input,select,button,textarea{font-family:inherit}
 textarea{width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:6px 0 10px;background:#fff;min-height:68px;resize:vertical}
-input[type="text"],input[type="date"],input[type="number"],input[type="url"],input[type="email"],input[type="password"],select{width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:6px 0 10px;background:#fff}
-button{ color:#111;border:none;border-radius:10px;padding:10px 12px;cursor:pointer;
+input[type="text"],input[type="date"],input[type="number"],input[type="url"],input[type="email"],input[type="password"],select{
+  width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:6px 0 10px;background:#fff
+}
+button{
+  color:#111;border:none;border-radius:10px;padding:10px 12px;cursor:pointer;
   background-image:linear-gradient(180deg,var(--gold-1),var(--gold-2));
   box-shadow:0 1px 0 rgba(0,0,0,.05), inset 0 .5px rgba(255,255,255,.6);
 }
@@ -52,11 +67,13 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 .item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px dashed #f0f0f0}
 .inline{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .total{font-weight:700}
-.qty{width:84px} .price{width:120px}
+.qty{width:84px}
+.price{width:120px}
 .tabs{display:flex;gap:6px;border-bottom:2px solid #e8e8e8;margin:10px 0 14px}
 .tab{padding:10px 12px;border-radius:10px 10px 0 0;background:#ecebe6;cursor:pointer;font-weight:600}
 .tab.active{background:#fff;border:1px solid #e8e8e8;border-bottom:none}
-.tabpanel{display:none} .tabpanel.active{display:block}
+.tabpanel{display:none}
+.tabpanel.active{display:block}
 .drop{border:2px dashed #cfcfcf;border-radius:12px;padding:16px;text-align:center;background:#fff}
 .drop.drag{border-color:var(--gold-2);background:#fff8e6}
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
@@ -83,19 +100,14 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
 .auth-tabs{display:flex;gap:6px;margin-bottom:10px}
 .auth-tabs .chip.active{background:#fff}
 
-/* Estilos recibo DOM (si lo usás en PNG) */
+/* Recibo oculto */
 #receiptHiddenRoot{position:fixed;left:-99999px;top:-99999px;visibility:hidden}
 .rbox{width:860px;max-width:860px;background:#fff;border:1px solid #e8e8e8;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.08);padding:18px;font-family:Poppins,system-ui,Arial,sans-serif;color:#222}
-.rhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.rtitle{font-size:24px;font-weight:700}
-.rmeta{font-size:12px;color:#666}
-.rrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
-.rcell{border:1px solid #eee;border-radius:10px;padding:10px}
-.rcell b{display:block;margin-bottom:4px}
-.rtable{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
-.rtable th,.rtable td{border:1px solid #eee;padding:6px;text-align:left}
-.rtot{margin-top:12px;font-size:18px;font-weight:700}
-.rfoot{margin-top:24px;border-top:1px dashed #ddd;padding-top:10px;font-size:12px;color:#666}
+
+@media(max-width:900px){
+  #evPanel .row{flex-direction:column}
+  .inline.wrap-search{flex-direction:column;align-items:flex-start}
+}
 </style>
 </head>
 <body>
@@ -128,7 +140,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
       <div class="col">
         <div class="card">
           <h3 style="margin:0 0 6px">Crear evento</h3>
-
           <form id="evForm" autocomplete="off">
             <label>Tipo de evento</label>
             <select id="evType">
@@ -207,6 +218,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             </div>
 
             <div class="small" id="evBasePreview">Total base estimado: $ 0,00</div>
+
             <div class="inline" style="justify-content:flex-end;margin-top:8px">
               <button id="evCreate" type="submit">Crear evento</button>
             </div>
@@ -218,10 +230,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
       <div class="col">
         <div class="card">
           <h3 style="margin:0 0 6px">Extras/Combos para el NUEVO evento</h3>
-
-          <input id="searchNewEx" type="text" placeholder="Buscar en catálogo de extras..."
-                 style="width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:0 0 6px" />
-
+          <input id="searchNewEx" type="text" placeholder="Buscar en catálogo de extras..." style="width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:0 0 6px" />
           <label>Elegir ítem</label>
           <select id="newExFor"><option value="">-- elegir extra o combo --</option></select>
           <div class="inline">
@@ -230,9 +239,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <button id="newAddEx" type="button">Agregar</button>
           </div>
           <div class="small">Si ponés precio aquí, reemplaza el del catálogo <b>solo</b> para este evento.</div>
-
           <hr style="border:none;border-top:1px dashed #eee;margin:10px 0">
-
           <h4 style="margin:0 0 6px">Extra personal (solo para este evento)</h4>
           <div class="inline">
             <input type="text" id="persName" placeholder="Nombre del extra personal" style="flex:2">
@@ -241,7 +248,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <button id="addPersonal" type="button">Agregar personal</button>
           </div>
           <div class="small">Estos ítems <b>no</b> se guardan en el catálogo y solo aparecen en este evento.</div>
-
           <h4 style="margin:10px 0 6px">Ítems</h4>
           <div id="newExList" class="list"></div>
           <div class="inline" style="justify-content:space-between;margin-top:8px">
@@ -263,6 +269,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
           <div class="small">TOTAL: <b id="newSumTotal" class="total">$ 0,00</b></div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -291,15 +298,18 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
           </div>
           <label>Descripción (opcional, para combos o extras)</label>
           <textarea id="exDesc" placeholder="Detalle del combo: incluye X, Y, Z..."></textarea>
-
-          <button id="exCreate" type="button">Guardar</button>
+          <div class="inline" style="gap:6px">
+            <button id="exCreate" type="button">Guardar</button>
+            <!-- *** CAMBIO: botón para actualizar existente -->
+            <button id="exUpdate" type="button" class="ghost" style="display:none">Actualizar</button>
+            <span id="exEditInfo" class="small" style="display:none">Editando: <b id="exEditName"></b></span>
+          </div>
         </div>
 
         <div class="card">
           <h3 style="margin:0 0 6px">Archivos del ítem</h3>
           <label>Elegir ítem</label>
           <select id="exSelectFiles"><option value="">-- elegir extra o combo --</option></select>
-
           <div id="drop" class="drop" style="margin-top:6px">
             Arrastrá y soltá PNG/JPG/PDF (máx. ~900 KB c/u) o
             <input type="file" id="fileInput" multiple accept="image/*,application/pdf" style="margin-left:6px" />
@@ -319,8 +329,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <div class="card">
           <div class="inline" style="justify-content:space-between;align-items:center">
             <h3 style="margin:0 0 6px">Catálogo</h3>
-            <input id="exSearch" type="text" placeholder="Buscar en catálogo..."
-                   style="flex:1;min-width:220px;margin-left:10px;padding:10px;border:1px solid #e9e9e9;border-radius:8px">
+            <input id="exSearch" type="text" placeholder="Buscar en catálogo..." style="flex:1;min-width:220px;margin-left:10px;padding:10px;border:1px solid #e9e9e9;border-radius:8px">
           </div>
           <div id="exList" class="list"></div>
         </div>
@@ -336,14 +345,16 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
   <div id="tab-evList" class="tabpanel">
     <div class="card">
       <h3 style="margin:0 0 6px">Buscar evento</h3>
-      <input type="text" id="evSearch" placeholder="Escribí el nombre...">
-
+      <div class="inline wrap-search" style="gap:10px;align-items:center">
+        <input type="text" id="evSearch" placeholder="Escribí el nombre..." style="flex:1;min-width:200px;">
+        <!-- NUEVO: búsqueda por fecha -->
+        <input type="date" id="evSearchDate" style="width:180px;">
+      </div>
       <div class="subtabs">
         <div class="chip active" data-prov="Todos">Todos</div>
         <div class="chip" data-prov="Mendoza">Mendoza</div>
         <div class="chip" data-prov="San Juan">San Juan</div>
       </div>
-
       <div class="typefilters" id="typeFilters">
         <div class="chip" data-type="15 años">Cumple 15</div>
         <div class="chip" data-type="18 años">Cumple 18</div>
@@ -351,10 +362,10 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <div class="chip" data-type="Fiesta de Egresados">Egresados</div>
         <div class="chip" data-type="Otro">Otro</div>
       </div>
-
       <div id="evList" class="list" style="margin-top:8px"></div>
     </div>
   </div>
+
 </div>
 
 <!-- ======== PANEL DE EVENTO ======== -->
@@ -371,16 +382,12 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <button id="pClose" class="close">Cerrar</button>
       </div>
     </div>
-
     <div class="row">
       <!-- Extras del evento -->
       <div class="col">
         <div class="card">
           <h3 style="margin:0 0 6px">Extras/Combos del evento</h3>
-
-          <input id="searchExEvent" type="text" placeholder="Buscar en catálogo de extras..."
-                 style="width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:0 0 6px" />
-
+          <input id="searchExEvent" type="text" placeholder="Buscar en catálogo de extras..." style="width:100%;padding:10px;border:1px solid #e9e9e9;border-radius:8px;margin:0 0 6px" />
           <label>Elegir ítem</label>
           <select id="exForEvent"><option value="">-- elegir extra o combo --</option></select>
           <div class="inline">
@@ -388,7 +395,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <input type="text" id="exPriceOverride" class="price" placeholder="Precio (opcional)" />
             <button id="addExtraToEvent" type="button">Agregar</button>
           </div>
-
           <hr style="border:none;border-top:1px dashed #eee;margin:10px 0">
           <h4 style="margin:0 0 6px">Extra personal (solo para este evento)</h4>
           <div class="inline">
@@ -398,7 +404,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <button id="addPersonalEv" type="button">Agregar personal</button>
           </div>
           <div class="small">Estos ítems <b>no</b> se guardan en el catálogo; quedan solo en este evento.</div>
-
           <h4 style="margin:10px 0 6px">Ítems del evento</h4>
           <div id="evExtrasList" class="list"></div>
           <div class="inline" style="justify-content:space-between;margin-top:8px">
@@ -412,7 +417,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
       <div class="col">
         <div class="card">
           <h3 style="margin:0 0 6px">Pagos</h3>
-
           <div class="inline" style="gap:10px">
             <input style="flex:1" id="payAmount" type="text" placeholder="Monto" inputmode="decimal">
             <select style="flex:1" id="payMethod">
@@ -431,19 +435,15 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             </select>
             <input style="flex:1" id="payDate" type="date" title="Fecha del pago">
           </div>
-
           <div class="inline" style="gap:10px;margin-top:6px">
             <input type="file" id="payProof" accept="image/*,application/pdf" style="flex:2">
             <span class="small"><b>Comprobante obligatorio</b> (imagen o PDF)</span>
           </div>
-
           <div class="inline" style="justify-content:flex-end;margin-top:6px">
             <button id="paySave" type="button">Guardar pago</button>
           </div>
-
           <h4 style="margin:10px 0 6px">Pagos guardados</h4>
           <div id="payList" class="list"></div>
-
           <div class="inline" style="justify-content:space-between;margin-top:8px">
             <div class="small">Total abonado: <span class="total" id="payTotal">$ 0,00</span></div>
             <div class="inline" style="gap:6px">
@@ -468,6 +468,7 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
               <div class="small">TOTAL: <b id="sumTotal" class="total">$ 0,00</b> — Abonado: <b id="sumPaid">$ 0,00</b> — SALDO: <b id="sumRemain" class="total">$ 0,00</b></div>
             </div>
           </div>
+
           <div class="col">
             <div class="card">
               <h3 style="margin:0 0 6px">Editar salón</h3>
@@ -507,12 +508,12 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
               </div>
               <div class="small">Afecta solo las <b>unidades pendientes</b> (adulto=1, niño=0.5); lo pagado queda congelado al precio anterior.</div>
             </div>
+
           </div>
         </div>
-
       </div>
-    </div>
 
+    </div>
   </div>
 </div>
 <!-- ======== /PANEL ======== -->
@@ -542,11 +543,9 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
         <button id="closeAuth2" class="ghost">Cancelar</button>
       </div>
     </div>
-
     <div class="inline" style="justify-content:flex-end;margin-top:8px">
       <button id="doGuest" class="ghost" type="button">Usar sin cuenta (este dispositivo)</button>
     </div>
-
     <div class="small" id="authMsg"></div>
   </div>
 </div>
@@ -562,30 +561,25 @@ const FIREBASE_CONFIG = {
   appId: "1:704291450097:web:f0ce42da229f0d1d30cd50",
   measurementId: "G-FKG9PR8VMH"
 };
-const CLOUD_ENABLED =
-  !!(FIREBASE_CONFIG.apiKey) &&
-  !/^TU_|^YOUR_/i.test(FIREBASE_CONFIG.apiKey);
 
+const CLOUD_ENABLED = !!(FIREBASE_CONFIG.apiKey) && !/^TU_|^YOUR_/i.test(FIREBASE_CONFIG.apiKey);
 let auth=null, db=null;
 
 const saveModeEl = document.getElementById('saveMode');
-const whoEl      = document.getElementById('who');
-const btnAuth    = document.getElementById('btnAuth');
-const btnLogout  = document.getElementById('btnLogout');
-const authBk     = document.getElementById('authBk');
-const authMsg    = document.getElementById('authMsg');
-
+const whoEl = document.getElementById('who');
+const btnAuth = document.getElementById('btnAuth');
+const btnLogout = document.getElementById('btnLogout');
+const authBk = document.getElementById('authBk');
+const authMsg = document.getElementById('authMsg');
 const alEmail = document.getElementById('alEmail');
-const alPass  = document.getElementById('alPass');
+const alPass = document.getElementById('alPass');
 const arEmail = document.getElementById('arEmail');
-const arPass  = document.getElementById('arPass');
-
-const doLogin    = document.getElementById('doLogin');
+const arPass = document.getElementById('arPass');
+const doLogin = document.getElementById('doLogin');
 const doRegister = document.getElementById('doRegister');
-const doGoogle   = document.getElementById('doGoogle');
-const doGuest    = document.getElementById('doGuest');
-const doReset    = document.getElementById('doReset');
-
+const doGoogle = document.getElementById('doGoogle');
+const doGuest = document.getElementById('doGuest');
+const doReset = document.getElementById('doReset');
 const SKIP_LOGIN = 'ok_ev_skip_login';
 
 function openAuth(){ authBk.style.display='flex'; }
@@ -595,10 +589,10 @@ function mapAuthError(e){
   const code = e?.code || '';
   const M = {
     'auth/email-already-in-use': 'Ya existe una cuenta con este email. Iniciá sesión o restablecé la contraseña.',
-    'auth/invalid-email':        'Email no válido.',
-    'auth/user-not-found':       'No existe una cuenta con ese email.',
-    'auth/wrong-password':       'Contraseña incorrecta.',
-    'auth/too-many-requests':    'Demasiados intentos. Probá más tarde.'
+    'auth/invalid-email': 'Email no válido.',
+    'auth/user-not-found': 'No existe una cuenta con ese email.',
+    'auth/wrong-password': 'Contraseña incorrecta.',
+    'auth/too-many-requests': 'Demasiados intentos. Probá más tarde.'
   };
   return 'Firebase: ' + (M[code] || e.message || 'Error desconocido');
 }
@@ -606,10 +600,10 @@ function mapAuthError(e){
 if (CLOUD_ENABLED) {
   firebase.initializeApp(FIREBASE_CONFIG);
   auth = firebase.auth();
-  db   = firebase.firestore();
+  db = firebase.firestore();
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-  btnAuth.onclick  = ()=>{ localStorage.removeItem(SKIP_LOGIN); openAuth(); };
+  btnAuth.onclick = ()=>{ localStorage.removeItem(SKIP_LOGIN); openAuth(); };
   btnLogout.onclick= ()=> auth.signOut();
 
   document.getElementById('closeAuth').onclick = closeAuth;
@@ -620,7 +614,7 @@ if (CLOUD_ENABLED) {
       const which=ch.dataset.auth;
       document.querySelectorAll('.auth-tabs .chip').forEach(x=>x.classList.toggle('active',x===ch));
       document.getElementById('authLogin').style.display=which==='login'?'block':'none';
-      document.getElementById('authReg').style.display  =which==='register'?'block':'none';
+      document.getElementById('authReg').style.display =which==='register'?'block':'none';
       authMsg.textContent='';
     };
   });
@@ -631,7 +625,6 @@ if (CLOUD_ENABLED) {
       closeAuth();
     }catch(e){ authMsg.textContent = mapAuthError(e); }
   };
-
   doRegister.onclick=async()=>{
     try{
       await auth.createUserWithEmailAndPassword(arEmail.value.trim(), arPass.value);
@@ -646,14 +639,12 @@ if (CLOUD_ENABLED) {
       }
     }
   };
-
   doGoogle.onclick=async()=>{
     try{
       await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
       closeAuth();
     }catch(e){ authMsg.textContent = mapAuthError(e); }
   };
-
   doReset.onclick = async ()=>{
     const email = (alEmail.value || arEmail.value || '').trim();
     if(!email){ authMsg.textContent = 'Escribí tu email arriba primero.'; return; }
@@ -662,20 +653,11 @@ if (CLOUD_ENABLED) {
       authMsg.textContent = 'Te enviamos un correo para restablecer tu contraseña.';
     }catch(e){ authMsg.textContent = mapAuthError(e); }
   };
-
   doGuest.onclick=()=>{ localStorage.setItem(SKIP_LOGIN,'1'); closeAuth(); };
-
-  document.addEventListener('DOMContentLoaded', ()=>{
-    if(!auth.currentUser && !localStorage.getItem(SKIP_LOGIN)) openAuth();
-  });
 
 } else {
   console.warn('Firebase desactivado → modo invitado (localStorage).');
-  auth = {
-    currentUser: null,
-    onAuthStateChanged: (cb)=> cb(null),
-    signOut: async()=>{}
-  };
+  auth = { currentUser: null, onAuthStateChanged: (cb)=> cb(null), signOut: async()=>{} };
   db = null;
   saveModeEl.textContent = 'Modo invitado (local)';
   whoEl.textContent = '—';
@@ -694,7 +676,7 @@ function num(v){
   const s = (''+(v??'')).trim();
   if (!s) return 0;
   const hasComma = s.includes(',');
-  const hasDot   = s.includes('.');
+  const hasDot = s.includes('.');
   if (hasComma && !hasDot){
     return parseFloat(s.replace(/\./g,'').replace(',', '.').replace(/[^\d.+-Ee]/g,'')) || 0;
   }
@@ -710,22 +692,44 @@ function normalizar(s){ return (s||'').toString().normalize('NFD').replace(/[\u0
 
 /* ===== Storage local ===== */
 const K = { EVENTS:'ok_ev_events', EXTRAS:'ok_ev_extras', MEDIA:'ok_ev_media', PAYSEQ:'ok_ev_payseq', LOGO:'ok_logo' };
-const store = { get:(k,def)=>{ try{ return JSON.parse(localStorage.getItem(k)||JSON.stringify(def)); }catch{ return def; } }, set:(k,v)=> localStorage.setItem(k, JSON.stringify(v)) };
+const store = {
+  get:(k,def)=>{
+    try{ return JSON.parse(localStorage.getItem(k)||JSON.stringify(def)); }
+    catch{ return def; }
+  },
+  set:(k,v)=> localStorage.setItem(k, JSON.stringify(v))
+};
 
 /* ===== Logo ===== */
 const logoPreview = document.getElementById('logoPreview');
 const logoFile = document.getElementById('logoFile');
 const logoGuardar = document.getElementById('logoGuardar');
 const logoStatus = document.getElementById('logoStatus');
-(function(){ const saved=localStorage.getItem(K.LOGO); if(saved){ logoPreview.src=saved; logoStatus.textContent='Logo guardado'; }})();
+(function(){
+  const saved=localStorage.getItem(K.LOGO);
+  if(saved){
+    logoPreview.src=saved;
+    logoStatus.textContent='Logo guardado';
+  }
+})();
 logoFile.addEventListener('change', ()=>{
   if(!logoFile.files?.length) return;
   const f=logoFile.files[0];
   const r=new FileReader();
-  r.onload=()=>{ logoPreview.src=r.result; logoStatus.textContent='Logo listo (sin guardar)'; };
+  r.onload=()=>{
+    logoPreview.src=r.result;
+    logoStatus.textContent='Logo listo (sin guardar)';
+  };
   r.readAsDataURL(f);
 });
-logoGuardar.addEventListener('click', ()=>{ try{ localStorage.setItem(K.LOGO, logoPreview.src); logoStatus.textContent='Logo guardado'; }catch(e){ alert('No se pudo guardar el logo.'); }});
+logoGuardar.addEventListener('click', ()=>{
+  try{
+    localStorage.setItem(K.LOGO, logoPreview.src);
+    logoStatus.textContent='Logo guardado';
+  }catch(e){
+    alert('No se pudo guardar el logo.');
+  }
+});
 
 /* ===== Tabs ===== */
 document.querySelectorAll('.tab').forEach(t=>{
@@ -779,7 +783,11 @@ if(!extras.length){
 let events = store.get(K.EVENTS, []);
 let mediaMap = store.get(K.MEDIA, {});
 let paySeqLocal = store.get(K.PAYSEQ, 0);
-function nextSeqLocal(){ paySeqLocal++; store.set(K.PAYSEQ, paySeqLocal); return String(paySeqLocal).padStart(12,'0'); }
+function nextSeqLocal(){
+  paySeqLocal++;
+  store.set(K.PAYSEQ, paySeqLocal);
+  return String(paySeqLocal).padStart(12,'0');
+}
 
 /* ===== Historial (Deshacer) ===== */
 const historyStack = {};
@@ -794,57 +802,87 @@ function updateUndoButton(){
 /* ===== AUTH listener ===== */
 let unsubEvents=null, unsubExtras=null, unsubMedia=null;
 if(auth && auth.onAuthStateChanged){
-auth.onAuthStateChanged(async (user)=>{
-  if(user){
-    whoEl.textContent = user.email||user.uid;
-    saveModeEl.textContent = 'Guardado en la cuenta (nube)';
-    btnAuth.style.display='none'; btnLogout.style.display='inline-block';
-    localStorage.removeItem(SKIP_LOGIN);
+  auth.onAuthStateChanged(async (user)=>{
+    if(user){
+      whoEl.textContent = user.email||user.uid;
+      saveModeEl.textContent = 'Guardado en la cuenta (nube)';
+      btnAuth.style.display='none';
+      btnLogout.style.display='inline-block';
+      localStorage.removeItem(SKIP_LOGIN);
 
-    if(unsubEvents) unsubEvents(); if(unsubExtras) unsubExtras(); if(unsubMedia) unsubMedia();
+      if(unsubEvents) unsubEvents();
+      if(unsubExtras) unsubExtras();
+      if(unsubMedia) unsubMedia();
 
-    unsubExtras = UCOL('extras').orderBy('name').onSnapshot(s=>{
-      extras = []; s.forEach(d=> extras.push(d.data()));
-      if(!extras.length){
-        const batch = db.batch();
-        [...BASE_EXTRAS, ...BASE_COMBOS].forEach(e=>{
-          const id=uid(); batch.set(UCOL('extras').doc(id), {id, desc: (e.desc||""), ...e});
+      unsubExtras = UCOL('extras').orderBy('name').onSnapshot(s=>{
+        extras = [];
+        s.forEach(d=> extras.push(d.data()));
+        if(!extras.length){
+          const batch = db.batch();
+          [...BASE_EXTRAS, ...BASE_COMBOS].forEach(e=>{
+            const id=uid();
+            batch.set(UCOL('extras').doc(id), {id, desc: (e.desc||""), ...e});
+          });
+          batch.commit();
+        }
+        store.set(K.EXTRAS, extras);
+        fillCatalogSelects();
+        renderCatalog();
+      });
+
+      unsubEvents = UCOL('events').orderBy('date','desc').onSnapshot(s=>{
+        events = [];
+        s.forEach(d=>{
+          const data = d.data();
+          events.push({ ...data, id: data.id || d.id });
         });
-        batch.commit();
-      }
-      store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
-    });
 
-    unsubEvents = UCOL('events').orderBy('date','desc').onSnapshot(s=>{
-      events = []; s.forEach(d=> events.push(d.data()));
-      store.set(K.EVENTS, events); renderEventList();
-      if(currentEventId){
-        const still = events.find(e=>e.id===currentEventId);
-        if(still){ renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(still); updateUndoButton(); }
-        else { evPanelBk.style.display='none'; currentEventId=null; updateUndoButton(); }
-      }
-    });
+        store.set(K.EVENTS, events);
+        renderEventList();
 
-    unsubMedia = UCOL('media').onSnapshot(s=>{
-      mediaMap={}; s.forEach(d=> mediaMap[d.id]=d.data().arr||[]);
-      store.set(K.MEDIA, mediaMap);
-    });
+        if(currentEventId){
+          const still = events.find(e=>e.id===currentEventId);
+          if(still){
+            renderEventItems();
+            renderPayments();
+            refreshSummary();
+            fillEditPeople(still);
+            updateUndoButton();
+          } else {
+            evPanelBk.style.display='none';
+            currentEventId=null;
+            updateUndoButton();
+          }
+        }
+      });
 
-  }else{
-    whoEl.textContent='—';
-    saveModeEl.textContent='Modo invitado (local)';
-    btnAuth.style.display='inline-block'; btnLogout.style.display='none';
-    if(unsubEvents) unsubEvents(); if(unsubExtras) unsubExtras(); if(unsubMedia) unsubMedia();
+      unsubMedia = UCOL('media').onSnapshot(s=>{
+        mediaMap={};
+        s.forEach(d=> mediaMap[d.id]=d.data().arr||[]);
+        store.set(K.MEDIA, mediaMap);
+      });
 
-    extras = store.get(K.EXTRAS, extras);
-    events = store.get(K.EVENTS, events);
-    mediaMap = store.get(K.MEDIA, mediaMap);
+    }else{
+      whoEl.textContent='—';
+      saveModeEl.textContent='Modo invitado (local)';
+      btnAuth.style.display='inline-block';
+      btnLogout.style.display='none';
 
-    if(CLOUD_ENABLED && !localStorage.getItem(SKIP_LOGIN)) openAuth();
+      if(unsubEvents) unsubEvents();
+      if(unsubExtras) unsubExtras();
+      if(unsubMedia) unsubMedia();
 
-    renderEventList(); fillCatalogSelects(); renderCatalog();
-  }
-});
+      extras = store.get(K.EXTRAS, extras);
+      events = store.get(K.EVENTS, events);
+      mediaMap = store.get(K.MEDIA, mediaMap);
+
+      if(CLOUD_ENABLED && !localStorage.getItem(SKIP_LOGIN)) openAuth();
+
+      renderEventList();
+      fillCatalogSelects();
+      renderCatalog();
+    }
+  });
 }
 
 /* ===== Refs (crear) ===== */
@@ -860,16 +898,13 @@ const evPricePerKids = document.getElementById('evPricePerKids');
 const evProvince = document.getElementById('evProvince');
 const evSalon = document.getElementById('evSalon');
 const evSalonPrice = document.getElementById('evSalonPrice');
-
 const evAdultsDinner = document.getElementById('evAdultsDinner');
 const evKidsDinner = document.getElementById('evKidsDinner');
 const evAdultsAfter = document.getElementById('evAdultsAfter');
 const evKidsAfter = document.getElementById('evKidsAfter');
 const evPriceAfter = document.getElementById('evPriceAfter');
 const evPriceAfterKids = document.getElementById('evPriceAfterKids');
-
 const evBasePreview = document.getElementById('evBasePreview');
-
 const newExFor = document.getElementById('newExFor');
 const newExQty = document.getElementById('newExQty');
 const newExPrice = document.getElementById('newExPrice');
@@ -881,12 +916,10 @@ const newSumExtras = document.getElementById('newSumExtras');
 const newSumTotal = document.getElementById('newSumTotal');
 const newClear = document.getElementById('newClear');
 const searchNewEx = document.getElementById('searchNewEx');
-
 const persName = document.getElementById('persName');
 const persPrice = document.getElementById('persPrice');
 const persQty = document.getElementById('persQty');
 const addPersonal = document.getElementById('addPersonal');
-
 const prevAdultsDinner = document.getElementById('prevAdultsDinner');
 const prevKidsDinner = document.getElementById('prevKidsDinner');
 const prevAdultsAfter = document.getElementById('prevAdultsAfter');
@@ -896,8 +929,13 @@ const prevKidsAfter = document.getElementById('prevKidsAfter');
 const exType = document.getElementById('exType');
 const exName = document.getElementById('exName');
 const exPrice = document.getElementById('exPrice');
-const exDesc  = document.getElementById('exDesc');
+const exDesc = document.getElementById('exDesc');
 const exCreate = document.getElementById('exCreate');
+const exUpdate = document.getElementById('exUpdate'); // CAMBIO
+const exEditInfo = document.getElementById('exEditInfo'); // CAMBIO
+const exEditName = document.getElementById('exEditName'); // CAMBIO
+let editingExtraId = null; // CAMBIO
+
 const exSelectFiles = document.getElementById('exSelectFiles');
 const exList = document.getElementById('exList');
 const exMedia = document.getElementById('exMedia');
@@ -910,6 +948,7 @@ const exSearch = document.getElementById('exSearch');
 
 /* ===== Refs (lista) ===== */
 const evSearch = document.getElementById('evSearch');
+const evSearchDate = document.getElementById('evSearchDate'); // NUEVO
 const evList = document.getElementById('evList');
 const provChips = Array.from(document.querySelectorAll('.subtabs .chip'));
 const typeChips = Array.from(document.querySelectorAll('.typefilters .chip'));
@@ -918,39 +957,32 @@ const typeChips = Array.from(document.querySelectorAll('.typefilters .chip'));
 const evPanelBk = document.getElementById('evPanelBk');
 const pClose = document.getElementById('pClose');
 const pDelete = document.getElementById('pDelete');
-const pUndo   = document.getElementById('pUndo');
+const pUndo = document.getElementById('pUndo');
 const pEvName = document.getElementById('pEvName');
 const pEvMeta = document.getElementById('pEvMeta');
-
 const exForEvent = document.getElementById('exForEvent');
 const exQty = document.getElementById('exQty');
 const exPriceOverride = document.getElementById('exPriceOverride');
 const addExtraToEvent = document.getElementById('addExtraToEvent');
-
 const persNameEv = document.getElementById('persNameEv');
 const persPriceEv = document.getElementById('persPriceEv');
 const persQtyEv = document.getElementById('persQtyEv');
 const addPersonalEv = document.getElementById('addPersonalEv');
-
 const evExtrasList = document.getElementById('evExtrasList');
 const evExtrasTotal = document.getElementById('evExtrasTotal');
 const evClearExtras = document.getElementById('evClearExtras');
 const searchExEvent = document.getElementById('searchExEvent');
-
 const payAmount = document.getElementById('payAmount');
 const payMethod = document.getElementById('payMethod');
 const payTarget = document.getElementById('payTarget');
 const payPerson = document.getElementById('payPerson');
-const payDate   = document.getElementById('payDate');
-const payProof  = document.getElementById('payProof');
-
+const payDate = document.getElementById('payDate');
+const payProof = document.getElementById('payProof');
 const paySave = document.getElementById('paySave');
 const btnGeneralReceipt = document.getElementById('btnGeneralReceipt');
 const payTotal = document.getElementById('payTotal');
 const payList = document.getElementById('payList');
-
 const newPricePer = document.getElementById('newPricePer');
-
 const sumSalon = document.getElementById('sumSalon');
 const sumSalonPrice = document.getElementById('sumSalonPrice');
 const sumPricePer = document.getElementById('sumPricePer');
@@ -959,18 +991,15 @@ const sumExtras = document.getElementById('sumExtras');
 const sumTotal = document.getElementById('sumTotal');
 const sumPaid = document.getElementById('sumPaid');
 const sumRemain = document.getElementById('sumRemain');
-
 const sumAdultsDinner = document.getElementById('sumAdultsDinner');
 const sumKidsDinner = document.getElementById('sumKidsDinner');
 const sumAdultsAfter = document.getElementById('sumAdultsAfter');
 const sumKidsAfter = document.getElementById('sumKidsAfter');
 const sumAfterPrices = document.getElementById('sumAfterPrices');
 const sumExtrasInline = document.getElementById('sumExtrasInline');
-
 const editSalon = document.getElementById('editSalon');
 const editSalonPrice = document.getElementById('editSalonPrice');
 const saveSalon = document.getElementById('saveSalon');
-
 const edAdultsDinner = document.getElementById('edAdultsDinner');
 const edKidsDinner = document.getElementById('edKidsDinner');
 const edAdultsAfter = document.getElementById('edAdultsAfter');
@@ -984,7 +1013,10 @@ let newEventItems = [];
 
 /* ===== INIT ===== */
 document.addEventListener('DOMContentLoaded', ()=>{
-  fillCatalogSelects(); renderCatalog(); renderEventList(); updateNewPreview();
+  fillCatalogSelects();
+  renderCatalog();
+  renderEventList();
+  updateNewPreview();
 
   const newKidsLbl = document.getElementById('newKidsLbl');
   if (newKidsLbl) {
@@ -1022,22 +1054,33 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if (searchNewEx) searchNewEx.addEventListener('input', ()=> fillCatalogSelects());
   if (searchExEvent) searchExEvent.addEventListener('input', ()=> fillCatalogSelects());
   if (exSearch) exSearch.addEventListener('input', renderCatalog);
+
+  // NUEVO: buscar por fecha
+  if (evSearchDate) evSearchDate.addEventListener('change', renderEventList);
+
+  if (!CLOUD_ENABLED || !auth.currentUser){
+    renderEventList();
+  }
 });
 
 /* ===== Helpers ===== */
 function populateSelectFromExtras(sel, list, q=''){
   const query = normalizar(q);
   sel.innerHTML='';
-  const g1=document.createElement('optgroup'); g1.label='Extras';
-  const g2=document.createElement('optgroup'); g2.label='Combos';
+  const g1=document.createElement('optgroup');
+  g1.label='Extras';
+  const g2=document.createElement('optgroup');
+  g2.label='Combos';
   list
     .filter(it => !query || normalizar(it.name).includes(query))
     .forEach(it=>{
       const o=document.createElement('option');
-      o.value=it.id; o.textContent=`${it.name} — ${money(it.price)}`;
+      o.value=it.id;
+      o.textContent = `${it.name} — ${money(it.price)}`;
       (it.type==='combo'?g2:g1).appendChild(o);
     });
-  sel.appendChild(g1); sel.appendChild(g2);
+  sel.appendChild(g1);
+  sel.appendChild(g2);
 }
 function fillCatalogSelects(){
   populateSelectFromExtras(newExFor, extras, searchNewEx?.value||'');
@@ -1045,28 +1088,41 @@ function fillCatalogSelects(){
   populateSelectFromExtras(exSelectFiles, extras, '');
 }
 function parseDateInput(v){
-  v=(v||'').trim(); if(!v) return '';
+  v=(v||'').trim();
+  if(!v) return '';
   if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
   const m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(m){ const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), y=m[3]; return `${y}-${mo}-${d}`; }
+  if(m){
+    const d=m[1].padStart(2,'0'), mo=m[2].padStart(2,'0'), y=m[3];
+    return `${y}-${mo}-${d}`;
+  }
   return v;
 }
-function getActiveProvince(){ const a=document.querySelector('.subtabs .chip.active'); return a?.dataset.prov || 'Todos'; }
+function getActiveProvince(){
+  const a=document.querySelector('.subtabs .chip.active');
+  return a?.dataset.prov || 'Todos';
+}
 function getActiveTypes(){
   return Array.from(document.querySelectorAll('.typefilters .chip.active')).map(x=>x.dataset.type);
 }
 
 /* ===== Crear evento ===== */
-evForm.addEventListener('submit', (e)=>{ e.preventDefault(); handleCreateEvent(); });
+evForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  handleCreateEvent();
+});
 async function handleCreateEvent(){
   errName.textContent=errDate.textContent=errPrice.textContent='';
-  const name=(evName.value||'').trim(); const date=parseDateInput(evDate.value);
+
+  const name=(evName.value||'').trim();
+  const date=parseDateInput(evDate.value);
   const pricePer=num(evPricePer.value);
-  const pKc = Math.max(0, num(evPricePerKids.value||0));
+
   if(!name){ errName.textContent=' requerido'; return; }
   if(!date){ errDate.textContent=' requerido'; return; }
   if(pricePer<=0){ errPrice.textContent=' inválido'; return; }
 
+  const pKc = Math.max(0, num(evPricePerKids.value||0));
   const ad= Math.max(0, num(evAdultsDinner.value));
   const kd= Math.max(0, num(evKidsDinner.value));
   const aa= Math.max(0, num(evAdultsAfter.value));
@@ -1097,40 +1153,63 @@ async function handleCreateEvent(){
     repriceLocks:[],
     createdAt:Date.now()
   };
-
   payload.baseTotal = baseOf(payload);
 
   if(isAuthed()){
-    const ref = await UCOL('events').add(payload); await ref.update({id:ref.id});
+    const ref = await UCOL('events').add(payload);
+    await ref.update({id:ref.id});
   }else{
-    events.unshift(payload); store.set(K.EVENTS, events);
+    events.unshift(payload);
+    store.set(K.EVENTS, events);
   }
 
-  evType.value='15 años'; evName.value=''; evDate.value='';
-  evProvince.value='San Juan'; evSalon.value='';
+  evType.value='15 años';
+  evName.value='';
+  evDate.value='';
+  evProvince.value='San Juan';
+  evSalon.value='';
   evSalonPrice.value='';
-  evPricePer.value=''; evPriceAfter.value=''; evPriceAfterKids.value='';
+  evPricePer.value='';
+  evPriceAfter.value='';
+  evPriceAfterKids.value='';
   evPricePerKids.value='';
-  evAdultsDinner.value='100'; evKidsDinner.value='0'; evAdultsAfter.value='0'; evKidsAfter.value='0';
-  newEventItems=[]; renderNewItems(); updateNewPreview(); renderEventList();
+  evAdultsDinner.value='100';
+  evKidsDinner.value='0';
+  evAdultsAfter.value='0';
+  evKidsAfter.value='0';
+  newEventItems=[];
+  renderNewItems();
+  updateNewPreview();
+  renderEventList();
   alert('Evento creado ✅');
 }
 
 /* ===== Ítems NUEVO evento ===== */
 newAddEx.addEventListener('click', ()=>{
-  const id=newExFor.value; if(!id) return alert('Elegí un ítem');
+  const id=newExFor.value;
+  if(!id) return alert('Elegí un ítem');
   const base=extras.find(x=>x.id===id);
   const qty=Math.max(1,num(newExQty.value));
   const override=newExPrice.value===''?null:num(newExPrice.value);
   newEventItems.unshift({
-    id:base.id,type:base.type,name:base.name,price:base.price,
-    desc:(base.desc||""), overridePrice:override,qty
+    id:base.id,
+    type:base.type,
+    name:base.name,
+    price:base.price,
+    desc:(base.desc||""),
+    overridePrice:override,
+    qty
   });
-  newExQty.value='1'; newExPrice.value=''; renderNewItems(); updateNewPreview();
+  newExQty.value='1';
+  newExPrice.value='';
+  renderNewItems();
+  updateNewPreview();
 });
-newClear.addEventListener('click', ()=>{ newEventItems=[]; renderNewItems(); updateNewPreview(); });
-
-// Extra personal NUEVO
+newClear.addEventListener('click', ()=>{
+  newEventItems=[];
+  renderNewItems();
+  updateNewPreview();
+});
 addPersonal.addEventListener('click', ()=>{
   const n=(persName.value||'').trim();
   const p=num(persPrice.value);
@@ -1138,30 +1217,38 @@ addPersonal.addEventListener('click', ()=>{
   if(!n) return alert('Poné un nombre para el extra personal');
   if(p<=0) return alert('Precio inválido');
   newEventItems.unshift({ id:uid(), type:'personal', name:n, price:p, desc:'', overridePrice:null, qty:q });
-  persName.value=''; persPrice.value=''; persQty.value='1';
-  renderNewItems(); updateNewPreview();
+  persName.value='';
+  persPrice.value='';
+  persQty.value='1';
+  renderNewItems();
+  updateNewPreview();
 });
-
 function renderNewItems(){
-  newExList.innerHTML=''; let total=0;
+  newExList.innerHTML='';
+  let total=0;
   newEventItems.forEach((e,idx)=>{
     const price=num(e.overridePrice ?? e.price);
-    const sub=price*e.qty; total+=sub;
+    const sub=price*e.qty;
+    total+=sub;
     const badge = e.type==='combo' ? 'Combo' : (e.type==='personal'?'Personal':'Extra');
-    const div=document.createElement('div'); div.className='item';
-    div.innerHTML=`<div><b>${e.name}</b> <span class="badge">${badge}</span>
-      ${e.desc ? `<div class="small" style="max-width:520px;white-space:pre-wrap">${e.desc}</div>`:''}
-      <div class="small">Precio: ${money(price)} — Cant: ${e.qty} — Subtotal: <b>${money(sub)}</b></div>
-    </div>
-    <button class="ghost" data-del="${idx}">Quitar</button>`;
+    const div=document.createElement('div');
+    div.className='item';
+    div.innerHTML=
+      `<div>
+        <b>${e.name}</b> <span class="badge">${badge}</span>
+        ${e.desc ? `<div class="small" style="max-width:520px;white-space:pre-wrap">${e.desc}</div>`:''}
+        <div class="small">Precio: ${money(price)} — Cant: ${e.qty} — Subtotal: <b>${money(sub)}</b></div>
+      </div>
+      <button class="ghost" data-del="${idx}">Quitar</button>`;
     newExList.appendChild(div);
   });
   newExList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=()=>{
-    newEventItems.splice(Number(b.dataset.del),1); renderNewItems(); updateNewPreview();
+    newEventItems.splice(Number(b.dataset.del),1);
+    renderNewItems();
+    updateNewPreview();
   });
   newExTotal.textContent=money(total);
 }
-
 function updateNewPreview(){
   const tempEv={
     salonPrice: Math.max(0,num(evSalonPrice.value||0)),
@@ -1176,12 +1263,18 @@ function updateNewPreview(){
     repriceLocks:[]
   };
   const base = baseOf(tempEv);
-  let ex=0; newEventItems.forEach(e=>{ const price=num(e.overridePrice ?? e.price); ex+=price*num(e.qty); });
+  let ex=0;
+  newEventItems.forEach(e=>{
+    const price=num(e.overridePrice ?? e.price);
+    ex+=price*num(e.qty);
+  });
   prevAdultsDinner.textContent=tempEv.adultsDinner;
   prevKidsDinner.textContent=tempEv.kidsDinner;
   prevAdultsAfter.textContent=tempEv.adultsAfter;
   prevKidsAfter.textContent=tempEv.kidsAfter;
-  newSumBase.textContent=money(base); newSumExtras.textContent=money(ex); newSumTotal.textContent=money(base+ex);
+  newSumBase.textContent=money(base);
+  newSumExtras.textContent=money(ex);
+  newSumTotal.textContent=money(base+ex);
   evBasePreview.textContent='Total base estimado: '+money(base);
 }
 
@@ -1192,97 +1285,156 @@ function renderCatalog(){
   extras
     .filter(it => !q || normalizar(it.name).includes(q))
     .forEach(it=>{
-      const row=document.createElement('div'); row.className='item';
+      const row=document.createElement('div');
+      row.className='item';
       const badge=it.type==='combo'?'<span class="badge">Combo</span>':'<span class="badge">Extra</span>';
-      row.innerHTML=`<div><b>${it.name}</b> ${badge}
-         ${it.desc ? `<div class="small" style="max-width:620px;white-space:pre-wrap">${it.desc}</div>`:''}
-         <div class="small">Precio catálogo: ${money(num(it.price))}</div>
-         <div class="inline" style="margin-top:6px">
-           <input type="text" class="name" value="${it.name}" data-id="${it.id}">
-           <select class="kind" data-id="${it.id}">
-             <option value="extra"${it.type!=='combo'?' selected':''}>Extra</option>
-             <option value="combo"${it.type==='combo'?' selected':''}>Combo</option>
-           </select>
-           <input type="text" class="price" value="${num(it.price)}" data-id="${it.id}" inputmode="decimal">
-         </div>
-         <div class="inline">
-           <textarea class="desc" data-id="${it.id}" placeholder="Descripción (opcional)">${it.desc||''}</textarea>
-         </div>
-         <div class="inline">
-           <button class="ghost" data-save="${it.id}" type="button">Guardar</button>
-           <button class="ghost" data-del="${it.id}" type="button">Eliminar</button>
-           <button class="ghost" data-view="${it.id}" type="button">Galería</button>
-         </div>
-      </div>`;
+      // *** CAMBIO: cada fila es click para editar
+      row.innerHTML=
+        `<div style="cursor:pointer" data-edit="${it.id}">
+          <b>${it.name}</b> ${badge}
+          ${it.desc ? `<div class="small" style="max-width:620px;white-space:pre-wrap">${it.desc}</div>`:''}
+          <div class="small">Precio catálogo: ${money(num(it.price))}</div>
+        </div>`;
       exList.appendChild(row);
     });
-  exList.querySelectorAll('button[data-save]').forEach(b=>{
-    b.onclick=async ()=>{
-      const id=b.dataset.save;
-      const name=exList.querySelector(`input.name[data-id="${id}"]`).value.trim();
-      let price=num(exList.querySelector(`input.price[data-id="${id}"]`).value);
-      const type=exList.querySelector(`select.kind[data-id="${id}"]`).value;
-      const desc=exList.querySelector(`textarea.desc[data-id="${id}"]`).value||'';
-      const idx=extras.findIndex(x=>x.id===id); extras[idx]={...extras[idx],name,price,type,desc};
-      if(isAuthed()) await UCOL('extras').doc(id).set(extras[idx]);
-      store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
+
+  // listeners para editar
+  exList.querySelectorAll('[data-edit]').forEach(el=>{
+    el.onclick = ()=>{
+      const id = el.getAttribute('data-edit');
+      const ext = extras.find(e=>e.id===id);
+      if(!ext) return;
+      editingExtraId = id;
+      exType.value = ext.type || 'extra';
+      exName.value = ext.name || '';
+      exPrice.value = ext.price != null ? ext.price : '';
+      exDesc.value = ext.desc || '';
+      exUpdate.style.display = 'inline-block';
+      exEditInfo.style.display = 'inline-block';
+      exEditName.textContent = ext.name || '';
+      // scroll arriba si hace falta
+      document.getElementById('tab-ex').scrollIntoView({behavior:'smooth', block:'start'});
     };
   });
-  exList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=async ()=>{
-    if(!confirm('Eliminar ítem?')) return;
-    extras=extras.filter(x=>x.id!==b.dataset.del);
-    if(isAuthed()) await UCOL('extras').doc(b.dataset.del).delete();
-    store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
-  });
-  exList.querySelectorAll('button[data-view]').forEach(b=> b.onclick=()=> loadGallery(b.dataset.view));
 }
 exCreate.addEventListener('click', async ()=>{
-  const name=(exName.value||'').trim(); if(!name) return alert('Nombre requerido');
-  let price=num(exPrice.value||0); if(price<=0) return alert('Precio inválido');
-  const id=uid(); const obj={id,type:exType.value,name,price,desc:(exDesc.value||'')};
-  extras.unshift(obj); if(isAuthed()) await UCOL('extras').doc(id).set(obj);
+  const name=(exName.value||'').trim();
+  if(!name) return alert('Nombre requerido');
+  let price=num(exPrice.value||0);
+  if(price<=0) return alert('Precio inválido');
+  const id=uid();
+  const obj={id,type:exType.value,name,price,desc:(exDesc.value||'')};
+  extras.unshift(obj);
+  if(isAuthed()) await UCOL('extras').doc(id).set(obj);
   store.set(K.EXTRAS, extras);
-  exName.value=''; exPrice.value=''; exDesc.value='';
-  fillCatalogSelects(); renderCatalog();
+  exName.value='';
+  exPrice.value='';
+  exDesc.value='';
+  exUpdate.style.display='none';
+  exEditInfo.style.display='none';
+  editingExtraId=null;
+  fillCatalogSelects();
+  renderCatalog();
+});
+// *** CAMBIO: actualizar existente
+exUpdate.addEventListener('click', async ()=>{
+  if(!editingExtraId) return;
+  const name=(exName.value||'').trim();
+  if(!name) return alert('Nombre requerido');
+  let price=num(exPrice.value||0);
+  if(price<=0) return alert('Precio inválido');
+  const desc = (exDesc.value||'');
+  const type = exType.value || 'extra';
+  const idx = extras.findIndex(e=>e.id===editingExtraId);
+  if(idx>-1){
+    extras[idx] = { ...extras[idx], name, price, desc, type };
+    store.set(K.EXTRAS, extras);
+    if(isAuthed()){
+      await UCOL('extras').doc(editingExtraId).set(extras[idx], {merge:true});
+    }
+    alert('Extra/combo actualizado ✅');
+  }
+  exUpdate.style.display='none';
+  exEditInfo.style.display='none';
+  editingExtraId=null;
+  exName.value='';
+  exPrice.value='';
+  exDesc.value='';
+  fillCatalogSelects();
+  renderCatalog();
 });
 
 /* Archivos ítem */
 let selectedFiles=[];
-function fileToDataUrl(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+function fileToDataUrl(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
 const okMediaSize = 900_000;
 drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('drag');});
 drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));
-drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');selectedFiles=Array.from(e.dataTransfer.files||[]);alert(`${selectedFiles.length} archivo(s) listos`);});
+drop.addEventListener('drop',e=>{
+  e.preventDefault();drop.classList.remove('drag');
+  selectedFiles=Array.from(e.dataTransfer.files||[]);
+  alert(`${selectedFiles.length} archivo(s) listos`);
+});
 fileInput.addEventListener('change',()=> selectedFiles = Array.from(fileInput.files||[]));
 btnUpload.addEventListener('click', async ()=>{
-  const id=exSelectFiles.value; if(!id) return alert('Elegí un ítem'); if(!selectedFiles.length) return alert('Seleccioná archivos');
+  const id=exSelectFiles.value;
+  if(!id) return alert('Elegí un ítem');
+  if(!selectedFiles.length) return alert('Seleccioná archivos');
   mediaMap[id]=mediaMap[id]||[];
   for(const f of selectedFiles){
     const dataUrl=await fileToDataUrl(f);
-    if((dataUrl||'').length>okMediaSize){ alert(`"${f.name}" pesa mucho. Pegá un enlace en su lugar.`); continue; }
+    if((dataUrl||'').length>okMediaSize){
+      alert(`"${f.name}" pesa mucho. Pegá un enlace en su lugar.`);
+      continue;
+    }
     mediaMap[id].unshift({name:f.name,type:f.type||'file',dataUrl,at:Date.now()});
   }
-  selectedFiles=[]; fileInput.value='';
-  if(isAuthed()) await UCOL('media').doc(id).set({arr:mediaMap[id]}); store.set(K.MEDIA, mediaMap);
-  alert('Archivos guardados'); await loadGallery(id);
+  selectedFiles=[];
+  fileInput.value='';
+  if(isAuthed()) await UCOL('media').doc(id).set({arr:mediaMap[id]});
+  store.set(K.MEDIA, mediaMap);
+  alert('Archivos guardados');
+  await loadGallery(id);
 });
 btnAddLink.addEventListener('click', async ()=>{
-  const id=exSelectFiles.value; if(!id) return alert('Elegí un ítem');
-  const link=(exLink.value||'').trim(); if(!isHttp(link)) return alert('Pegá un enlace válido');
-  mediaMap[id]=mediaMap[id]||[]; mediaMap[id].unshift({name:link.split('/').pop(),type:'link',url:link,at:Date.now()});
-  if(isAuthed()) await UCOL('media').doc(id).set({arr:mediaMap[id]}); store.set(K.MEDIA, mediaMap); exLink.value=''; await loadGallery(id);
+  const id=exSelectFiles.value;
+  if(!id) return alert('Elegí un ítem');
+  const link=(exLink.value||'').trim();
+  if(!isHttp(link)) return alert('Pegá un enlace válido');
+  mediaMap[id]=mediaMap[id]||[];
+  mediaMap[id].unshift({name:link.split('/').pop(),type:'link',url:link,at:Date.now()});
+  if(isAuthed()) await UCOL('media').doc(id).set({arr:mediaMap[id]});
+  store.set(K.MEDIA, mediaMap);
+  exLink.value='';
+  await loadGallery(id);
 });
 async function loadGallery(id){
   const exMedia = document.getElementById('exMedia');
-  exMedia.innerHTML=''; const arr=mediaMap[id]||[];
-  if(!arr.length){ exMedia.innerHTML='<div class="small">Sin archivos</div>'; return; }
+  exMedia.innerHTML='';
+  const arr=mediaMap[id]||[];
+  if(!arr.length){
+    exMedia.innerHTML='<div class="small">Sin archivos</div>';
+    return;
+  }
   arr.forEach(m=>{
-    const box=document.createElement('div'); box.className='media';
+    const box=document.createElement('div');
+    box.className='media';
     const pdf=(m.type||'').includes('pdf') || (m.url||'').toLowerCase().endsWith('.pdf') || (m.dataUrl||'').startsWith('data:application/pdf');
     const imgUrl=m.dataUrl||m.url;
-    if(pdf){ box.innerHTML=`<div>PDF</div><a class="link" href="${imgUrl}" target="_blank">Abrir</a>`; }
-    else if(imgUrl){ box.innerHTML=`<img src="${imgUrl}" alt=""><a class="link" href="${imgUrl}" target="_blank">Ver grande</a>`; }
-    else{ box.innerHTML=`<div class="small">Archivo</div>`; }
+    if(pdf){
+      box.innerHTML=`<div>PDF</div><a class="link" href="${imgUrl}" target="_blank">Abrir</a>`;
+    } else if(imgUrl){
+      box.innerHTML=`<img src="${imgUrl}" alt=""><a class="link" href="${imgUrl}" target="_blank">Ver grande</a>`;
+    } else{
+      box.innerHTML=`<div class="small">Archivo</div>`;
+    }
     exMedia.appendChild(box);
   });
 }
@@ -1304,7 +1456,8 @@ function baseDinner(ev){
   locks.forEach(l=>{
     const u = (typeof l.units === 'number') ? l.units : num(l.units);
     const p = (typeof l.price === 'number') ? l.price : num(l.price);
-    lockedUnits += u; lockedAmount += u*p;
+    lockedUnits += u;
+    lockedAmount += u*p;
   });
   lockedUnits = round2(lockedUnits);
   const currentUnits = round2(Math.max(0, totalUnits - lockedUnits));
@@ -1323,11 +1476,18 @@ function baseOf(ev){
 }
 function computeTotals(ev){
   const base = baseOf(ev);
-  let extrasTotal=0; (ev.items||[]).forEach(it=> extrasTotal += num(it.overridePrice??it.price)*num(it.qty||1));
-  let paid=0; (ev.payments||[]).forEach(p=> paid += num(p.amount));
-  const total=base+extrasTotal; const remain=Math.max(0,total-paid);
+  let extrasTotal=0;
+  (ev.items||[]).forEach(it=> extrasTotal += num(it.overridePrice??it.price)*num(it.qty||1));
+  let paid=0;
+  (ev.payments||[]).forEach(p=> paid += num(p.amount));
+  const total=base+extrasTotal;
+  const remain=Math.max(0,total-paid);
   return {
-    base, extrasTotal, total, paid, remain,
+    base,
+    extrasTotal,
+    total,
+    paid,
+    remain,
     salonPrice: Math.max(0, num(ev.salonPrice||0)),
     pricePer:num(ev.pricePer||0),
     priceAfter:num(ev.priceAfter||0),
@@ -1349,38 +1509,51 @@ function parseDateForSort(d){
 }
 function renderEventList(){
   const q=normalizar(evSearch?.value||'');
+  const dfilter = (evSearchDate?.value||'').trim(); // NUEVO
   const prov=getActiveProvince();
   const activeTypes=getActiveTypes();
-
   const sorted = (events||[]).slice().sort((a,b)=> parseDateForSort(a.date) - parseDateForSort(b.date));
-
   evList.innerHTML='';
+
   sorted
     .filter(e=> !q || normalizar(e.name||'').includes(q))
+    .filter(e=> !dfilter || (e.date||'')===dfilter) // NUEVO filtro por fecha exacta
     .filter(e=> prov==='Todos'?true:((e.province||'San Juan')===prov))
     .filter(e=> activeTypes.length? activeTypes.includes(e.type||'') : true)
     .forEach(e=>{
       const t=computeTotals(e);
+      const realId = e.id || e.docId || e._id || '';
       const meta=`${e.type||'-'} • ${e.date||'sin fecha'} • ${e.province||'San Juan'}`;
-      const salonTxt=e.salon?` • Salón: ${e.salon}`:'';
-      const div=document.createElement('div'); div.className='item';
-      div.innerHTML=`
-        <div>
+      const salonTxt=e.salon? ` • Salón: ${e.salon}`:'';
+      const div=document.createElement('div');
+      div.className='item';
+      div.innerHTML=
+        `<div>
           <b>${e.name||'-'}</b>
           <div class="small">${meta}${salonTxt}</div>
           <div class="small">Cena A:${t.ad} • N:${t.kd} | Después A:${t.aa} • N:${t.ka}</div>
         </div>
         <div class="inline">
-          <span class="small">Precio cena: <b>${money(e.pricePer||0)}</b></span>
-          <span class="small">Salón: <b>${money(t.salonPrice)}</b></span>
           <span class="small">Faltante: <b>${money(t.remain)}</b></span>
-          <button class="ghost" data-open="${e.id}">Abrir</button>
-          <button class="ghost" data-del="${e.id}">Eliminar</button>
+          <button class="ghost" data-open="${realId}">Abrir</button>
+          <button class="ghost" data-del="${realId}">Eliminar</button>
         </div>`;
       evList.appendChild(div);
     });
-  evList.querySelectorAll('button[data-open]').forEach(b=> b.onclick = ()=> openEventPanel(b.dataset.open));
-  evList.querySelectorAll('button[data-del]').forEach(b=> b.onclick = ()=> deleteEventDeep(b.dataset.del));
+
+  evList.querySelectorAll('button[data-open]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.getAttribute('data-open');
+      console.log('👉 abrir evento:', id);
+      openEventPanel(id);
+    };
+  });
+  evList.querySelectorAll('button[data-del]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.getAttribute('data-del');
+      deleteEventDeep(id);
+    };
+  });
 }
 evSearch.addEventListener('input', renderEventList);
 
@@ -1389,13 +1562,33 @@ pClose.addEventListener('click', ()=> evPanelBk.style.display='none');
 pDelete.addEventListener('click', ()=> currentEventId && deleteEventDeep(currentEventId));
 
 function openEventPanel(id){
-  currentEventId=id; const ev=events.find(x=>x.id===id)||{};
+  let ev = events.find(e => e.id === id);
+
+  if(!ev){
+    ev = events.find(e => e.docId === id) || events.find(e => e._id === id);
+  }
+
+  if(!ev){
+    console.warn('⚠️ No se encontró el evento con id:', id, 'en', events);
+    alert('No se pudo abrir el evento porque no se encontró en la lista. Mirá la consola (F12) para ver el id que llegó.');
+    return;
+  }
+
+  currentEventId = ev.id || id;
+
   pEvName.textContent=ev.name||'Evento';
   pEvMeta.textContent=`${ev.type||'-'} • ${ev.date||'sin fecha'} • ${ev.province||'San Juan'}`;
   editSalon.value=ev.salon||'';
   editSalonPrice.value = ev.salonPrice ? num(ev.salonPrice) : '';
-  renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(ev); updateUndoButton();
+
+  renderEventItems();
+  renderPayments();
+  refreshSummary();
+  fillEditPeople(ev);
+  updateUndoButton();
+
   evPanelBk.style.display='flex';
+
   const kidsLbl = document.getElementById('kidsLbl');
   if (kidsLbl) {
     const hasKidsPrice = num(ev.pricePerKids || 0) > 0;
@@ -1414,19 +1607,31 @@ async function persistEvent(ev, push=true){
     }
   }
   if(isAuthed()) await UCOL('events').doc(ev.id).set(ev,{merge:true});
-  else { const i=events.findIndex(x=>x.id===ev.id); if(i>-1) events[i]=ev; store.set(K.EVENTS, events); }
+  else {
+    const i=events.findIndex(x=>x.id===ev.id);
+    if(i>-1) events[i]=ev;
+    store.set(K.EVENTS, events);
+  }
   if(ev.id===currentEventId) updateUndoButton();
 }
 async function undoLast(){
-  const id=currentEventId; if(!id) return;
+  const id=currentEventId;
+  if(!id) return;
   const stack = historyStack[id]||[];
   if(!stack.length) { alert('No hay cambios para deshacer.'); return; }
   const prev = stack.pop();
   if(isAuthed()) await UCOL('events').doc(id).set(prev);
-  const idx=events.findIndex(e=>e.id===id); if(idx>-1) events[idx]=prev; store.set(K.EVENTS, events);
+  const idx=events.findIndex(e=>e.id===id);
+  if(idx>-1) events[idx]=prev;
+  store.set(K.EVENTS, events);
   editSalon.value=prev.salon||'';
   editSalonPrice.value = prev.salonPrice ? num(prev.salonPrice) : '';
-  renderEventItems(); renderPayments(); refreshSummary(); fillEditPeople(prev); updateUndoButton(); renderEventList();
+  renderEventItems();
+  renderPayments();
+  refreshSummary();
+  fillEditPeople(prev);
+  updateUndoButton();
+  renderEventList();
 }
 
 /* ===== Eliminar evento ===== */
@@ -1440,7 +1645,10 @@ async function deleteEventDeep(id){
   }
   events = events.filter(e=>e.id!==id);
   store.set(K.EVENTS, events);
-  if(currentEventId===id){ evPanelBk.style.display='none'; currentEventId=null; }
+  if(currentEventId===id){
+    evPanelBk.style.display='none';
+    currentEventId=null;
+  }
   renderEventList();
 }
 
@@ -1452,31 +1660,33 @@ saveSalon.addEventListener('click', async ()=>{
   ev.salonPrice = Math.max(0, num(editSalonPrice.value||0))||0;
   ev.baseTotal = baseOf(ev);
   await persistEvent(ev);
-  refreshSummary(); renderEventList();
+  refreshSummary();
+  renderEventList();
   alert('Salón actualizado ✅');
 });
 
 /* ===== Editar personas & “después” ===== */
 function fillEditPeople(ev){
   edAdultsDinner.value = ev.adultsDinner||0;
-  edKidsDinner.value   = ev.kidsDinner||0;
-  edAdultsAfter.value  = ev.adultsAfter||0;
-  edKidsAfter.value    = ev.kidsAfter||0;
-  edPriceAfter.value   = num(ev.priceAfter||0) || '';
+  edKidsDinner.value = ev.kidsDinner||0;
+  edAdultsAfter.value = ev.adultsAfter||0;
+  edKidsAfter.value = ev.kidsAfter||0;
+  edPriceAfter.value = num(ev.priceAfter||0) || '';
   edPriceAfterKids.value = num(ev.priceAfterKids||0) || '';
 }
 savePeople.addEventListener('click', async ()=>{
   if(!currentEventId) return;
   const ev=events.find(e=>e.id===currentEventId);
   ev.adultsDinner = Math.max(0,num(edAdultsDinner.value));
-  ev.kidsDinner   = Math.max(0,num(edKidsDinner.value));
-  ev.adultsAfter  = Math.max(0,num(edAdultsAfter.value));
-  ev.kidsAfter    = Math.max(0,num(edKidsAfter.value));
-  ev.priceAfter   = Math.max(0,num(edPriceAfter.value));
+  ev.kidsDinner = Math.max(0,num(edKidsDinner.value));
+  ev.adultsAfter = Math.max(0,num(edAdultsAfter.value));
+  ev.kidsAfter = Math.max(0,num(edKidsAfter.value));
+  ev.priceAfter = Math.max(0,num(edPriceAfter.value));
   ev.priceAfterKids = Math.max(0,num(edPriceAfterKids.value));
   ev.baseTotal = baseOf(ev);
   await persistEvent(ev);
-  refreshSummary(); renderEventList();
+  refreshSummary();
+  renderEventList();
   alert('Cantidades y precios actualizados ✅');
 });
 
@@ -1484,27 +1694,36 @@ savePeople.addEventListener('click', async ()=>{
 addExtraToEvent.addEventListener('click', async ()=>{
   if(!currentEventId) return;
   const ev=events.find(e=>e.id===currentEventId);
-  const id=exForEvent.value; if(!id) return alert('Elegí un ítem');
-  const base=extras.find(x=>x.id===id); if(!base) return;
+  const id=exForEvent.value;
+  if(!id) return alert('Elegí un ítem');
+  const base=extras.find(x=>x.id===id);
+  if(!base) return;
   const qty=Math.max(1,num(exQty.value));
   const override=exPriceOverride.value===''?null:num(exPriceOverride.value);
   ev.items = ev.items || [];
   ev.items.unshift({ id:base.id, type:base.type, name:base.name, price:base.price, desc:(base.desc||""), overridePrice:override, qty });
   await persistEvent(ev);
-  exQty.value='1'; exPriceOverride.value='';
-  renderEventItems(); refreshSummary();
+  exQty.value='1';
+  exPriceOverride.value='';
+  renderEventItems();
+  refreshSummary();
 });
 addPersonalEv.addEventListener('click', async ()=>{
   if(!currentEventId) return;
   const ev=events.find(e=>e.id===currentEventId);
-  const n=(persNameEv.value||'').trim(); const p=num(persPriceEv.value); const q=Math.max(1,num(persQtyEv.value));
+  const n=(persNameEv.value||'').trim();
+  const p=num(persPriceEv.value);
+  const q=Math.max(1,num(persQtyEv.value));
   if(!n) return alert('Poné un nombre para el extra personal');
   if(p<=0) return alert('Precio inválido');
   ev.items = ev.items || [];
   ev.items.unshift({ id:uid(), type:'personal', name:n, price:p, desc:'', overridePrice:null, qty:q });
   await persistEvent(ev);
-  persNameEv.value=''; persPriceEv.value=''; persQtyEv.value='1';
-  renderEventItems(); refreshSummary();
+  persNameEv.value='';
+  persPriceEv.value='';
+  persQtyEv.value='1';
+  renderEventItems();
+  refreshSummary();
 });
 evClearExtras.addEventListener('click', async ()=>{
   if(!currentEventId) return;
@@ -1512,23 +1731,33 @@ evClearExtras.addEventListener('click', async ()=>{
   const ev=events.find(e=>e.id===currentEventId);
   ev.items=[];
   await persistEvent(ev);
-  renderEventItems(); refreshSummary();
+  renderEventItems();
+  refreshSummary();
 });
 function renderEventItems(){
-  if(!currentEventId){ evExtrasList.innerHTML=''; evExtrasTotal.textContent=money(0); return; }
+  if(!currentEventId){
+    evExtrasList.innerHTML='';
+    evExtrasTotal.textContent=money(0);
+    return;
+  }
   const ev=events.find(e=>e.id===currentEventId) || {items:[]};
   const items = ev.items||[];
-  evExtrasList.innerHTML=''; let total=0;
+  evExtrasList.innerHTML='';
+  let total=0;
   items.forEach((it,idx)=>{
     const price=num(it.overridePrice ?? it.price);
-    const sub=price*num(it.qty||1); total+=sub;
+    const sub=price*num(it.qty||1);
+    total+=sub;
     const badge = it.type==='combo' ? 'Combo' : (it.type==='personal'?'Personal':'Extra');
-    const row=document.createElement('div'); row.className='item';
-    row.innerHTML=`<div><b>${it.name}</b> <span class="badge">${badge}</span>
-      ${it.desc ? `<div class="small" style="max-width:520px;white-space:pre-wrap">${it.desc}</div>`:''}
-      <div class="small">Precio: ${money(price)} — Cant: ${it.qty} — Subtotal: <b>${money(sub)}</b></div>
-    </div>
-    <button class="ghost" data-del="${idx}">Quitar</button>`;
+    const row=document.createElement('div');
+    row.className='item';
+    row.innerHTML=
+      `<div>
+        <b>${it.name}</b> <span class="badge">${badge}</span>
+        ${it.desc ? `<div class="small" style="max-width:520px;white-space:pre-wrap">${it.desc}</div>`:''}
+        <div class="small">Precio: ${money(price)} — Cant: ${it.qty} — Subtotal: <b>${money(sub)}</b></div>
+      </div>
+      <button class="ghost" data-del="${idx}">Quitar</button>`;
     evExtrasList.appendChild(row);
   });
   evExtrasList.querySelectorAll('button[data-del]').forEach(b=> b.onclick=async ()=>{
@@ -1536,7 +1765,8 @@ function renderEventItems(){
     const ev=events.find(e=>e.id===currentEventId);
     ev.items.splice(idx,1);
     await persistEvent(ev);
-    renderEventItems(); refreshSummary();
+    renderEventItems();
+    refreshSummary();
   });
   evExtrasTotal.textContent=money(total);
 }
@@ -1547,9 +1777,7 @@ document.getElementById('btnReprice').addEventListener('click', async ()=>{
   const ev=events.find(e=>e.id===currentEventId);
   const newP = Math.max(0,num(newPricePer.value));
   if(newP<=0) return alert('Precio nuevo inválido');
-
   ev.repriceLocks = Array.isArray(ev.repriceLocks) ? ev.repriceLocks : [];
-
   const oldP = Math.max(0, num(ev.pricePer||0));
   if(oldP<=0){ alert('Precio actual inválido'); return; }
 
@@ -1574,7 +1802,6 @@ document.getElementById('btnReprice').addEventListener('click', async ()=>{
 
   const amountToLock = Math.max(0, totalPaidDinner - lockedAmount);
   const addUnits = oldP > 0 ? round2(amountToLock / oldP) : 0;
-
   if(addUnits > 0){
     ev.repriceLocks.push({ units: addUnits, price: oldP, at: Date.now() });
   }
@@ -1583,7 +1810,8 @@ document.getElementById('btnReprice').addEventListener('click', async ()=>{
   ev.baseTotal = baseOf(ev);
   await persistEvent(ev);
   newPricePer.value='';
-  refreshSummary(); renderEventList();
+  refreshSummary();
+  renderEventList();
   alert('Reprecio aplicado ✅');
 });
 
@@ -1598,14 +1826,12 @@ paySave.addEventListener('click', async ()=>{
   const method = (payMethod.value||'Otro');
   const target = (payTarget.value||'general');
   const person = (payPerson.value||'adulto');
-
   const f = payProof.files?.[0];
   if(!f){ alert('El comprobante es obligatorio.'); return; }
   const dataUrl = await fileToDataUrl(f);
 
-  // ==== NUEVO: congelar cantidad y precio al momento del pago ====
   let unitPricePaid = 0;
-  let paidQty = null; // null → lo calculamos después; número → ya está congelado
+  let paidQty = null;
   if (target === 'opciones') {
     if (person === 'nino') {
       const kidsPrice = num(ev.pricePerKids || 0);
@@ -1622,7 +1848,6 @@ paySave.addEventListener('click', async ()=>{
     }
     paidQty = unitPricePaid > 0 ? Math.floor(amount / unitPricePaid) : 0;
   } else {
-    // general / extras / salon → no aplica cantidad
     unitPricePaid = 0;
     paidQty = '-';
   }
@@ -1635,38 +1860,47 @@ paySave.addEventListener('click', async ()=>{
     person,
     at: when,
     proof: { name: f.name, type: f.type, dataUrl },
-    unitPricePaid: unitPricePaid,  // ← guardamos precio que tenía en ese momento
-    paidQty: paidQty               // ← guardamos cantidad que tenía en ese momento
+    unitPricePaid: unitPricePaid,
+    paidQty: paidQty
   };
+
   ev.payments = ev.payments || [];
   ev.payments.push(payObj);
   await persistEvent(ev);
-  payAmount.value=''; payDate.value=''; payProof.value='';
-  renderPayments(); refreshSummary();
+  payAmount.value='';
+  payDate.value='';
+  payProof.value='';
+  renderPayments();
+  refreshSummary();
   alert('Pago guardado ✅');
 });
 function renderPayments(){
-  if(!currentEventId){ payList.innerHTML=''; payTotal.textContent=money(0); return; }
+  if(!currentEventId){
+    payList.innerHTML='';
+    payTotal.textContent=money(0);
+    return;
+  }
   const ev=events.find(e=>e.id===currentEventId) || {payments:[]};
   const pays=(ev.payments||[]).slice().sort((a,b)=>a.at-b.at);
-  payList.innerHTML=''; let total=0;
+  payList.innerHTML='';
+  let total=0;
   const destinoMap = { general:'General / Mixto', extras:'Extras', salon:'Salón', opciones:'Opciones (cena)', despues:'Después de cena' };
   pays.forEach((p,idx)=>{
     total += num(p.amount);
-    const li=document.createElement('div'); li.className='item';
     const det = (p.target==='opciones'||p.target==='despues')
       ? `${destinoMap[p.target]} — ${(p.person==='nino'?'Niño':'Adulto')}`
       : (destinoMap[p.target] || 'General / Mixto');
     const proofLabel = p.proof?.name || 'Comprobante';
     const proofUrl = p.proof?.dataUrl || p.proof?.url || '';
-    li.innerHTML = `
-      <div>
+    const li=document.createElement('div');
+    li.className='item';
+    li.innerHTML =
+      `<div>
         <b>${money(p.amount)}</b> • ${p.method||'-'} • ${new Date(p.at).toLocaleDateString('es-AR')}
         <div class="small">${det}</div>
         ${proofUrl ? `<a class="link" href="${proofUrl}" target="_blank">Ver ${proofLabel}</a>` : '<span class="small">Sin comprobante</span>'}
       </div>
-      <button class="ghost" data-delpay="${idx}">Eliminar</button>
-    `;
+      <button class="ghost" data-delpay="${idx}">Eliminar</button>`;
     payList.appendChild(li);
   });
   payList.querySelectorAll('button[data-delpay]').forEach(b=> b.onclick=async ()=>{
@@ -1674,7 +1908,8 @@ function renderPayments(){
     const ev=events.find(e=>e.id===currentEventId);
     ev.payments.splice(idx,1);
     await persistEvent(ev);
-    renderPayments(); refreshSummary();
+    renderPayments();
+    refreshSummary();
   });
   payTotal.textContent = money(total);
 }
@@ -1682,12 +1917,18 @@ function renderPayments(){
 /* ===== Resumen ===== */
 function refreshSummary(){
   if(!currentEventId){
-    sumSalon.textContent='—'; sumSalonPrice.textContent=money(0);
-    sumPricePer.textContent=money(0); sumBase.textContent=money(0);
-    sumExtras.textContent=money(0); sumTotal.textContent=money(0);
-    sumPaid.textContent=money(0); sumRemain.textContent=money(0);
-    sumAdultsDinner.textContent='0'; sumKidsDinner.textContent='0';
-    sumAdultsAfter.textContent='0'; sumKidsAfter.textContent='0';
+    sumSalon.textContent='—';
+    sumSalonPrice.textContent=money(0);
+    sumPricePer.textContent=money(0);
+    sumBase.textContent=money(0);
+    sumExtras.textContent=money(0);
+    sumTotal.textContent=money(0);
+    sumPaid.textContent=money(0);
+    sumRemain.textContent=money(0);
+    sumAdultsDinner.textContent='0';
+    sumKidsDinner.textContent='0';
+    sumAdultsAfter.textContent='0';
+    sumKidsAfter.textContent='0';
     sumAfterPrices.textContent=`${money(0)} / ${money(0)}`;
     sumExtrasInline.textContent=money(0);
     return;
@@ -1710,7 +1951,28 @@ function refreshSummary(){
   sumExtrasInline.textContent=money(t.extrasTotal);
 }
 
-/* ==== Helpers comprobantes → imagen ==== */
+/* ==== Utilidades PDF ==== */
+function ensureJsPDF(){
+  if (!(window.jspdf && window.jspdf.jsPDF)) {
+    alert('No se pudo cargar jsPDF.');
+    return null;
+  }
+  return window.jspdf.jsPDF;
+}
+function savePdf(doc, filename){
+  try { doc.save(filename); }
+  catch (e) {
+    const url = doc.output('bloburl');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 1500);
+  }
+}
 function dataUrlToUint8Array(dataUrl){
   const base64 = (dataUrl.split(',')[1] || '');
   const binary = atob(base64);
@@ -1728,7 +1990,8 @@ async function rasterizePdfFirstPage(dataUrl){
     const vp = page.getViewport({ scale: 2 });
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = vp.width; canvas.height = vp.height;
+    canvas.width = vp.width;
+    canvas.height = vp.height;
     await page.render({ canvasContext: ctx, viewport: vp }).promise;
     return canvas.toDataURL('image/png');
   }catch{
@@ -1747,96 +2010,82 @@ async function proofToImageDataUrl(proof){
 }
 function loadImg(src){
   return new Promise((res,rej)=>{
-    const i = new Image(); i.crossOrigin = 'anonymous';
-    i.onload = ()=> res(i); i.onerror = rej; i.src = src;
+    const i = new Image();
+    i.crossOrigin = 'anonymous';
+    i.onload = ()=> res(i);
+    i.onerror = rej;
+    i.src = src;
   });
 }
 
-/* ==== Utilidades PDF ==== */
-function ensureJsPDF(){
-  if (!(window.jspdf && window.jspdf.jsPDF)) {
-    alert('No se pudo cargar jsPDF.');
-    return null;
-  }
-  return window.jspdf.jsPDF;
-}
-function savePdf(doc, filename){
-  try { doc.save(filename); }
-  catch (e) {
-    const url = doc.output('bloburl');
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; a.style.display='none';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 1500);
-  }
-}
-
-/* ==== Recibo GENERAL (PDF) — con columna CANTIDAD congelada y "-" para general/extras/salón ==== */
+/* ==== Recibo GENERAL (PDF) ==== */
 async function generateGeneralReceipt(eventId){
-  const jsPDF = ensureJsPDF(); if(!jsPDF) return;
-
+  const jsPDF = ensureJsPDF();
+  if(!jsPDF) return;
   const ev = (events || []).find(e => e.id === eventId);
-  if(!ev){ alert('Evento no encontrado'); return; }
-
+  if(!ev){
+    alert('Evento no encontrado');
+    return;
+  }
   const t = computeTotals(ev);
   const pays = (ev.payments||[]).slice().sort((a,b)=>a.at-b.at);
-
-  const seq = (typeof nextSeqAny === 'function')
-    ? await nextSeqAny()
-    : (typeof nextSeqLocal === 'function' ? nextSeqLocal() : String(Date.now()).slice(-12));
-
+  const seq = (typeof nextSeqAny === 'function') ? await nextSeqAny() : (typeof nextSeqLocal === 'function' ? nextSeqLocal() : String(Date.now()).slice(-12));
   const doc = new jsPDF({ unit:'mm', format:'a4' });
 
   const W=210, H=297, M=10, BOXW=W-2*M, PAD=6, X0=M, Y0=M, innerX=X0+PAD, innerW=BOXW-2*PAD;
   const moneyFmt = n => '$ ' + Number(n||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});
   const destinoMap = { general:'General / Mixto', extras:'Extras', salon:'Salón', opciones:'Opciones (cena)', despues:'Después de cena' };
+
   let curPage = 1;
 
   doc.setLineWidth(0.25);
   doc.rect(X0, Y0, BOXW, H-2*M);
 
   try{
-    const i=new Image(); i.crossOrigin='anonymous';
+    const i=new Image();
+    i.crossOrigin='anonymous';
     i.src=document.getElementById('logoPreview').src;
     await new Promise(r=> i.onload=r);
     const c=document.createElement('canvas');
-    c.width=i.width; c.height=i.height; c.getContext('2d').drawImage(i,0,0);
+    c.width=i.width; c.height=i.height;
+    c.getContext('2d').drawImage(i,0,0);
     doc.addImage(c.toDataURL('image/png'),'PNG', X0+BOXW-32, Y0+6, 24, 24);
   }catch{}
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(22);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(22);
   doc.text('RECIBO GENERAL', X0+PAD, Y0+16);
-  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(11);
   doc.text('OK EVENTOS — CATERING Y EGRESADOS', X0+PAD, Y0+22);
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
   doc.text(`N° ${seq}`, X0+PAD, Y0+30);
   doc.setFont('helvetica','normal');
   doc.text(new Date().toLocaleString('es-AR'), X0+PAD+32, Y0+30);
 
   let y = Y0+36;
 
-  // Fila 1
+  // datos evento
   const r1H=12, c1=innerX, c2=innerX+innerW/3, c3=innerX+innerW*2/3;
   doc.rect(innerX, y, innerW, r1H);
   doc.line(c2, y, c2, y+r1H);
   doc.line(c3, y, c3, y+r1H);
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.text('Nombre del evento', c1+2, y+5);
-  doc.text('Fecha evento',      c2+2, y+5);
-  doc.text('Provincia',         c3+2, y+5);
+  doc.text('Fecha evento', c2+2, y+5);
+  doc.text('Provincia', c3+2, y+5);
   doc.setFont('helvetica','bold');
-  doc.text(ev.name||'—',        c1+2, y+10);
-  doc.text(ev.date||'—',        c2+2, y+10);
-  doc.text(ev.province||'—',    c3+2, y+10);
+  doc.text(ev.name||'—', c1+2, y+10);
+  doc.text(ev.date||'—', c2+2, y+10);
+  doc.text(ev.province||'—', c3+2, y+10);
 
-  // Fila 2
   y += r1H;
   const r2H=12, cA=innerX, cB=innerX+innerW/2;
   doc.rect(innerX, y, innerW, r2H);
   doc.line(cB, y, cB, y+r2H);
   doc.setFont('helvetica','normal');
-  doc.text('Salón',       cA+2, y+5);
+  doc.text('Salón', cA+2, y+5);
   doc.text('Precio cena', cB+2, y+5);
   doc.setFont('helvetica','bold');
   doc.text(ev.salon||'—', cA+2, y+10);
@@ -1851,35 +2100,33 @@ async function generateGeneralReceipt(eventId){
   }
 
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('Pagos registrados', innerX, y); y += 6;
+  doc.text('Pagos registrados', innerX, y);
+  y += 6;
 
   // tabla
   const colW1 = 35, colW2 = 78, colW3 = 30, colW4 = 35;
   const tcol1 = innerX, tcol2 = tcol1 + colW1, tcol3 = tcol2 + colW2, tcol4 = tcol3 + colW3;
   const tableW = innerW, headerH = 10, rowGap = 8;
-
   doc.setLineWidth(0.25);
   doc.rect(innerX, y, tableW, headerH);
   doc.line(tcol2, y, tcol2, y+headerH);
   doc.line(tcol3, y, tcol3, y+headerH);
   doc.line(tcol4, y, tcol4, y+headerH);
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
-  doc.text('Fecha',           tcol1+2, y+6);
+  doc.text('Fecha', tcol1+2, y+6);
   doc.text('Cliente/Destino', tcol2+2, y+6);
-  doc.text('Cantidad',        tcol3+2, y+6);
-  doc.text('Monto',           tcol4+2, y+6);
+  doc.text('Cantidad', tcol3+2, y+6);
+  doc.text('Monto', tcol4+2, y+6);
 
   let curY = y + headerH;
   doc.setFont('helvetica','normal');
   let sumPaid = 0;
   const bottomSafe = H - M - 80;
-
   const rowLinkAreas = [];
   for (let i=0;i<pays.length;i++){
     const p = pays[i];
     sumPaid += Number(p.amount)||0;
 
-    // ===== cantidad congelada =====
     let shownQty = '-';
     if (p.target === 'opciones' || p.target === 'despues') {
       if (typeof p.paidQty === 'number') {
@@ -1887,7 +2134,6 @@ async function generateGeneralReceipt(eventId){
       } else if (p.paidQty === '-') {
         shownQty = '-';
       } else {
-        // pago viejo sin p.paidQty → calculamos con precio actual (solo esta vez)
         let unitPrice = 0;
         if (p.target === 'opciones') {
           if (p.person === 'nino') {
@@ -1905,9 +2151,6 @@ async function generateGeneralReceipt(eventId){
         }
         shownQty = unitPrice > 0 ? String(Math.floor(num(p.amount)/unitPrice)) : '0';
       }
-    } else {
-      // general, extras, salon
-      shownQty = '-';
     }
 
     if (curY + rowGap > bottomSafe){
@@ -1921,7 +2164,7 @@ async function generateGeneralReceipt(eventId){
       doc.text('Fecha', tcol1+2, curY+6);
       doc.text('Cliente/Destino', tcol2+2, curY+6);
       doc.text('Cantidad', tcol3+2, curY+6);
-      doc.text('Monto',  tcol4+2, curY+6);
+      doc.text('Monto', tcol4+2, curY+6);
       curY += headerH;
       doc.setFont('helvetica','normal');
     }
@@ -1934,23 +2177,18 @@ async function generateGeneralReceipt(eventId){
     doc.line(tcol2, curY, tcol2, curY+rowGap);
     doc.line(tcol3, curY, tcol3, curY+rowGap);
     doc.line(tcol4, curY, tcol4, curY+rowGap);
-
     doc.text(new Date(p.at).toLocaleDateString('es-AR'), tcol1+2, curY+6);
     doc.text(det, tcol2+2, curY+6);
     doc.text(shownQty, tcol3+2, curY+6);
     doc.text(moneyFmt(p.amount), tcol4 + colW4 - 2, curY+6, { align: 'right' });
-
-    rowLinkAreas[i] = {
-      page: curPage, x: tcol2+1.5, y: curY+1, w: colW2-3, h: rowGap-2
-    };
-
+    rowLinkAreas[i] = { page: curPage, x: tcol2+1.5, y: curY+1, w: colW2-3, h: rowGap-2 };
     curY += rowGap;
   }
 
   curY += 8;
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('Totales del evento', innerX, curY); curY += 4;
-
+  doc.text('Totales del evento', innerX, curY);
+  curY += 4;
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.rect(innerX, curY, innerW, 24);
   doc.text(`Cena — Adultos: ${t.ad} • Niños: ${t.kd}`, innerX+2, curY+7);
@@ -1958,7 +2196,100 @@ async function generateGeneralReceipt(eventId){
   doc.text(`Extras: ${moneyFmt(t.extrasTotal)}`, innerX+2, curY+14);
   doc.text(`Precios después A/N: ${moneyFmt(t.priceAfter)} / ${moneyFmt(t.priceAfterKids)}`, innerX+innerW/2, curY+14);
 
-  // comprobantes
+  // === BLOQUE: Faltante de pago (sin planificados) ===
+  let yF = curY + 24 + 4;
+
+  // cantidades totales
+  const totalCenaAdultos = Math.max(0, num(ev.adultsDinner || 0));
+  const totalCenaNinos = Math.max(0, num(ev.kidsDinner || 0));
+  const totalDespuesAdultos = Math.max(0, num(ev.adultsAfter || 0));
+  const totalDespuesNinos = Math.max(0, num(ev.kidsAfter || 0));
+
+  // precios
+  const precioCenaAdulto = Math.max(0, num(ev.pricePer || 0));
+  const precioCenaNino = (()=> {
+    const pK = num(ev.pricePerKids || 0);
+    if (pK > 0) return pK;
+    return precioCenaAdulto * 0.5;
+  })();
+  const precioDespuesAdulto = Math.max(0, num(ev.priceAfter || 0));
+  const precioDespuesNino = Math.max(0, num(ev.priceAfterKids || 0));
+
+  // pagos
+  let pagadoCenaAdultos = 0;
+  let pagadoCenaNinos = 0;
+  let pagadoDespuesAdultos = 0;
+  let pagadoDespuesNinos = 0;
+  let pagadoExtras = 0;
+  let pagadoSalon = 0;
+
+  for (const p of pays) {
+    const amt = Math.max(0, num(p.amount));
+    if (p.target === 'opciones') {
+      if (p.person === 'nino') {
+        pagadoCenaNinos += amt;
+      } else {
+        pagadoCenaAdultos += amt;
+      }
+    } else if (p.target === 'despues') {
+      if (p.person === 'nino') {
+        pagadoDespuesNinos += amt;
+      } else {
+        pagadoDespuesAdultos += amt;
+      }
+    } else if (p.target === 'extras') {
+      pagadoExtras += amt;
+    } else if (p.target === 'salon') {
+      pagadoSalon += amt;
+    }
+  }
+
+  // montos previstos
+  const previstoCenaAdultos = totalCenaAdultos * precioCenaAdulto;
+  const previstoCenaNinos = totalCenaNinos * precioCenaNino;
+  const previstoDespuesAdultos = totalDespuesAdultos * precioDespuesAdulto;
+  const previstoDespuesNinos = totalDespuesNinos * precioDespuesNino;
+
+  // faltantes en plata
+  const faltanteCenaAdultosPlata = Math.max(0, previstoCenaAdultos - pagadoCenaAdultos);
+  const faltanteCenaNinosPlata = Math.max(0, previstoCenaNinos - pagadoCenaNinos);
+  const faltanteDespuesAdultosPlata = Math.max(0, previstoDespuesAdultos - pagadoDespuesAdultos);
+  const faltanteDespuesNinosPlata = Math.max(0, previstoDespuesNinos - pagadoDespuesNinos);
+
+  // convertir a OPCIONES (solo lo que faltan) → lo que pediste
+  const faltanteCenaAdultosOpc = precioCenaAdulto > 0 ? Math.ceil(faltanteCenaAdultosPlata / precioCenaAdulto) : 0;
+  const faltanteCenaNinosOpc = precioCenaNino > 0 ? Math.ceil(faltanteCenaNinosPlata / precioCenaNino) : 0;
+  const faltanteDespuesAdultosOpc = precioDespuesAdulto > 0 ? Math.ceil(faltanteDespuesAdultosPlata / precioDespuesAdulto) : 0;
+  const faltanteDespuesNinosOpc = precioDespuesNino > 0 ? Math.ceil(faltanteDespuesNinosPlata / precioDespuesNino) : 0;
+
+  const faltanteExtras = Math.max(0, t.extrasTotal - pagadoExtras);
+  const faltanteSalon = Math.max(0, t.salonPrice - pagadoSalon);
+
+  if (yF + 28 > H - M - 10) {
+    doc.addPage();
+    curPage++;
+    yF = Y0 + 12;
+  }
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('Faltante de pago', innerX, yF);
+  yF += 4;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+
+  const blockH = 32;
+  doc.rect(innerX, yF, innerW, blockH);
+
+  // *** CAMBIO: sin "(x planificados)"
+  doc.text(`Cena adulto: ${faltanteCenaAdultosOpc} opciones`, innerX+2, yF+6);
+  doc.text(`Cena niño: ${faltanteCenaNinosOpc} opciones`, innerX+innerW/2, yF+6);
+
+  doc.text(`Después de cena adulto: ${faltanteDespuesAdultosOpc} opciones`, innerX+2, yF+12);
+  doc.text(`Después de cena niño: ${faltanteDespuesNinosOpc} opciones`, innerX+innerW/2, yF+12);
+
+  doc.text(`Extras: ${moneyFmt(faltanteExtras)}`, innerX+2, yF+18);
+  doc.text(`Salón: ${moneyFmt(faltanteSalon)}`, innerX+innerW/2, yF+18);
+  // === FIN BLOQUE ===
+
   const proofAnchors = {};
   const proofs = [];
   for (let i=0;i<pays.length;i++){
@@ -1966,29 +2297,22 @@ async function generateGeneralReceipt(eventId){
     const imgUrl = await proofToImageDataUrl(p.proof||null);
     if (imgUrl) proofs.push({ payIndex:i, imgUrl, at:p.at });
   }
-
   if (proofs.length){
     for (let i=0;i<proofs.length;i++){
       const { imgUrl, at, payIndex } = proofs[i];
       doc.addPage(); curPage++;
-
       const maxW = BOXW;
       const maxH = H - 2*M;
-
       try{
         const img = await loadImg(imgUrl);
         const ratio = img.width / Math.max(1, img.height);
         let w = maxW, h = w / ratio;
         if (h > maxH) { h = maxH; w = h * ratio; }
-
         const x = X0 + (BOXW - w) / 2;
         const yImg = Y0 + (maxH - h) / 2;
-
         doc.addImage(imgUrl, 'PNG', x, yImg, w, h);
-
         doc.setFont('helvetica','normal'); doc.setFontSize(9);
         doc.text(new Date(at).toLocaleString('es-AR'), X0 + 2, H - M - 4);
-
         proofAnchors[payIndex] = { page: curPage, top: yImg };
       }catch{}
     }
@@ -1999,10 +2323,7 @@ async function generateGeneralReceipt(eventId){
     const anchor = proofAnchors[i];
     if (!area || !anchor) continue;
     doc.setPage(area.page);
-    doc.link(area.x, area.y, area.w, area.h, {
-      pageNumber: anchor.page,
-      top: anchor.top
-    });
+    doc.link(area.x, area.y, area.w, area.h, { pageNumber: anchor.page, top: anchor.top });
   }
 
   const safe=(ev.name||'evento').replace(/[^\p{L}\p{N}_-]+/gu,'_');
