@@ -162,8 +162,6 @@ button.ghost{background:#eee;color:#333;box-shadow:none}
             <label>Precio de salón (opcional)</label>
             <input type="text" id="evSalonPrice" placeholder="Ej: 300000" inputmode="decimal" />
 
-            <!-- Campo Opción/Plan eliminado -->
-
             <div class="row">
               <div class="col">
                 <label>Precio por persona (cena) (ADULTOS) <span class="err" id="errPrice"></span></label>
@@ -817,7 +815,6 @@ auth.onAuthStateChanged(async (user)=>{
       store.set(K.EXTRAS, extras); fillCatalogSelects(); renderCatalog();
     });
 
-    // Seguimos escuchando pero vamos a reordenar en renderEventList() por fecha ascendente
     unsubEvents = UCOL('events').orderBy('date','desc').onSnapshot(s=>{
       events = []; s.forEach(d=> events.push(d.data()));
       store.set(K.EVENTS, events); renderEventList();
@@ -1087,7 +1084,6 @@ async function handleCreateEvent(){
     province:evProvince.value||'San Juan',
     salon:(evSalon.value||'').trim()||null,
     salonPrice: salonPrice>0 ? salonPrice : 0,
-    // optionLabel eliminado
     pricePer:pricePer,
     pricePerKids: pKc>0 ? pKc : null,
     priceAfter:pA,
@@ -1110,7 +1106,6 @@ async function handleCreateEvent(){
     events.unshift(payload); store.set(K.EVENTS, events);
   }
 
-  // reset
   evType.value='15 años'; evName.value=''; evDate.value='';
   evProvince.value='San Juan'; evSalon.value='';
   evSalonPrice.value='';
@@ -1347,7 +1342,6 @@ function computeTotals(ev){
 /* ===== Lista de eventos ===== */
 function parseDateForSort(d){
   if(!d) return Infinity;
-  // esperamos "YYYY-MM-DD"
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
   if(!m) return Infinity;
   const t = new Date(`${m[1]}-${m[2]}-${m[3]}T12:00:00`).getTime();
@@ -1358,7 +1352,6 @@ function renderEventList(){
   const prov=getActiveProvince();
   const activeTypes=getActiveTypes();
 
-  // Ordenar del más cercano al más lejano por fecha de realización
   const sorted = (events||[]).slice().sort((a,b)=> parseDateForSort(a.date) - parseDateForSort(b.date));
 
   evList.innerHTML='';
@@ -1610,6 +1603,30 @@ paySave.addEventListener('click', async ()=>{
   if(!f){ alert('El comprobante es obligatorio.'); return; }
   const dataUrl = await fileToDataUrl(f);
 
+  // ==== NUEVO: congelar cantidad y precio al momento del pago ====
+  let unitPricePaid = 0;
+  let paidQty = null; // null → lo calculamos después; número → ya está congelado
+  if (target === 'opciones') {
+    if (person === 'nino') {
+      const kidsPrice = num(ev.pricePerKids || 0);
+      unitPricePaid = kidsPrice > 0 ? kidsPrice : num(ev.pricePer || 0) * 0.5;
+    } else {
+      unitPricePaid = num(ev.pricePer || 0);
+    }
+    paidQty = unitPricePaid > 0 ? Math.floor(amount / unitPricePaid) : 0;
+  } else if (target === 'despues') {
+    if (person === 'nino') {
+      unitPricePaid = num(ev.priceAfterKids || 0);
+    } else {
+      unitPricePaid = num(ev.priceAfter || 0);
+    }
+    paidQty = unitPricePaid > 0 ? Math.floor(amount / unitPricePaid) : 0;
+  } else {
+    // general / extras / salon → no aplica cantidad
+    unitPricePaid = 0;
+    paidQty = '-';
+  }
+
   const payObj = {
     id: uid(),
     amount,
@@ -1617,7 +1634,9 @@ paySave.addEventListener('click', async ()=>{
     target,
     person,
     at: when,
-    proof: { name: f.name, type: f.type, dataUrl }
+    proof: { name: f.name, type: f.type, dataUrl },
+    unitPricePaid: unitPricePaid,  // ← guardamos precio que tenía en ese momento
+    paidQty: paidQty               // ← guardamos cantidad que tenía en ese momento
   };
   ev.payments = ev.payments || [];
   ev.payments.push(payObj);
@@ -1752,7 +1771,7 @@ function savePdf(doc, filename){
   }
 }
 
-/* ==== Recibo GENERAL (PDF) — sin "Total a pagar" y sin "Opción/Plan" ==== */
+/* ==== Recibo GENERAL (PDF) — con columna CANTIDAD congelada y "-" para general/extras/salón ==== */
 async function generateGeneralReceipt(eventId){
   const jsPDF = ensureJsPDF(); if(!jsPDF) return;
 
@@ -1797,7 +1816,7 @@ async function generateGeneralReceipt(eventId){
 
   let y = Y0+36;
 
-  // Fila 1 (3 columnas): Nombre / Fecha / Provincia
+  // Fila 1
   const r1H=12, c1=innerX, c2=innerX+innerW/3, c3=innerX+innerW*2/3;
   doc.rect(innerX, y, innerW, r1H);
   doc.line(c2, y, c2, y+r1H);
@@ -1811,7 +1830,7 @@ async function generateGeneralReceipt(eventId){
   doc.text(ev.date||'—',        c2+2, y+10);
   doc.text(ev.province||'—',    c3+2, y+10);
 
-  // Fila 2 (2 columnas): Salón / Precio cena  (sin Opción/Plan)
+  // Fila 2
   y += r1H;
   const r2H=12, cA=innerX, cB=innerX+innerW/2;
   doc.rect(innerX, y, innerW, r2H);
@@ -1834,6 +1853,7 @@ async function generateGeneralReceipt(eventId){
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
   doc.text('Pagos registrados', innerX, y); y += 6;
 
+  // tabla
   const colW1 = 35, colW2 = 78, colW3 = 30, colW4 = 35;
   const tcol1 = innerX, tcol2 = tcol1 + colW1, tcol3 = tcol2 + colW2, tcol4 = tcol3 + colW3;
   const tableW = innerW, headerH = 10, rowGap = 8;
@@ -1846,7 +1866,7 @@ async function generateGeneralReceipt(eventId){
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
   doc.text('Fecha',           tcol1+2, y+6);
   doc.text('Cliente/Destino', tcol2+2, y+6);
-  doc.text('Método',          tcol3+2, y+6);
+  doc.text('Cantidad',        tcol3+2, y+6);
   doc.text('Monto',           tcol4+2, y+6);
 
   let curY = y + headerH;
@@ -1859,6 +1879,37 @@ async function generateGeneralReceipt(eventId){
     const p = pays[i];
     sumPaid += Number(p.amount)||0;
 
+    // ===== cantidad congelada =====
+    let shownQty = '-';
+    if (p.target === 'opciones' || p.target === 'despues') {
+      if (typeof p.paidQty === 'number') {
+        shownQty = String(p.paidQty);
+      } else if (p.paidQty === '-') {
+        shownQty = '-';
+      } else {
+        // pago viejo sin p.paidQty → calculamos con precio actual (solo esta vez)
+        let unitPrice = 0;
+        if (p.target === 'opciones') {
+          if (p.person === 'nino') {
+            const kidsPrice = num(ev.pricePerKids || 0);
+            unitPrice = kidsPrice > 0 ? kidsPrice : num(ev.pricePer || 0) * 0.5;
+          } else {
+            unitPrice = num(ev.pricePer || 0);
+          }
+        } else if (p.target === 'despues') {
+          if (p.person === 'nino') {
+            unitPrice = num(ev.priceAfterKids || 0);
+          } else {
+            unitPrice = num(ev.priceAfter || 0);
+          }
+        }
+        shownQty = unitPrice > 0 ? String(Math.floor(num(p.amount)/unitPrice)) : '0';
+      }
+    } else {
+      // general, extras, salon
+      shownQty = '-';
+    }
+
     if (curY + rowGap > bottomSafe){
       doc.addPage(); curPage++;
       curY = Y0+12;
@@ -1869,7 +1920,7 @@ async function generateGeneralReceipt(eventId){
       doc.line(tcol4, curY, tcol4, curY+headerH);
       doc.text('Fecha', tcol1+2, curY+6);
       doc.text('Cliente/Destino', tcol2+2, curY+6);
-      doc.text('Método', tcol3+2, curY+6);
+      doc.text('Cantidad', tcol3+2, curY+6);
       doc.text('Monto',  tcol4+2, curY+6);
       curY += headerH;
       doc.setFont('helvetica','normal');
@@ -1886,7 +1937,7 @@ async function generateGeneralReceipt(eventId){
 
     doc.text(new Date(p.at).toLocaleDateString('es-AR'), tcol1+2, curY+6);
     doc.text(det, tcol2+2, curY+6);
-    doc.text(p.method||'-', tcol3+2, curY+6);
+    doc.text(shownQty, tcol3+2, curY+6);
     doc.text(moneyFmt(p.amount), tcol4 + colW4 - 2, curY+6, { align: 'right' });
 
     rowLinkAreas[i] = {
@@ -1907,9 +1958,7 @@ async function generateGeneralReceipt(eventId){
   doc.text(`Extras: ${moneyFmt(t.extrasTotal)}`, innerX+2, curY+14);
   doc.text(`Precios después A/N: ${moneyFmt(t.priceAfter)} / ${moneyFmt(t.priceAfterKids)}`, innerX+innerW/2, curY+14);
 
-  // IMPORTANTE: ya NO se imprime "TOTAL A PAGAR" en el recibo
-
-  /* === Comprobantes (cada uno ocupa una hoja completa) + anclas === */
+  // comprobantes
   const proofAnchors = {};
   const proofs = [];
   for (let i=0;i<pays.length;i++){
